@@ -1,50 +1,64 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+- Version change: 1.0.0 → 1.1.0
+- Modified principles: I Requirements Are Traceable → I Modular Monolith and Separated Clients;
+  III Testable Delivery → III Testable Delivery and Quality Gates;
+  IV Data Integrity and Auditability → IV PostgreSQL, Migrations, and Configuration;
+  V Simple, Observable Operations → V Decoupled AI and Scoped Changes
+- Added sections: Fixed Technical Constraints
+- Removed sections: none
+- Follow-up TODOs: define the selected framework, migration tool, and concrete test/lint/build commands
+  in the first implementation plan.
+-->
+# Daily Report System Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Modular Monolith and Separated Clients
+The system MUST remain a modular monolith with clear domain-module boundaries. The frontend and backend
+MUST be independently deployable codebases or packages communicating through defined APIs; frontend
+code MUST NOT access database internals or backend implementation details.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Requirements and Privacy Are Traceable
+Every deliverable MUST map to approved acceptance criteria and a user outcome. Personal, report, and
+authentication data MUST use least-privilege access. Secrets MUST NOT appear in source control, logs,
+fixtures, client bundles, or hardcoded values.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Testable Delivery and Quality Gates
+Core business rules MUST have automated tests at the most suitable boundary. A task is complete only
+when its relevant test, lint, and build commands pass. Defects MUST receive a regression test when
+practical; a failing quality gate MUST be fixed rather than bypassed.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. PostgreSQL, Migrations, and Configuration
+PostgreSQL is the authoritative production database. Every schema or data change MUST be represented by
+an ordered, reviewable migration with an explicit rollback or recovery strategy. Configuration, URLs,
+credentials, feature switches, and environment-specific behavior MUST use environment variables; code
+MUST NOT hardcode environment values.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Decoupled AI and Scoped Changes
+AI capabilities MUST be isolated behind explicit interfaces and MUST NOT encode or replace deterministic
+business rules. Changes MUST be limited to modules required by the approved task. Modifying unrelated
+modules requires a documented dependency reason and explicit review.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Fixed Technical Constraints
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+Production deployment MUST use Docker images and documented environment-variable configuration. Plans
+MUST state module ownership, API contracts, PostgreSQL migration impact, test coverage for core rules,
+and any AI boundary affected. The implementation plan MUST define the exact local `test`, `lint`, and
+`build` commands before work begins.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## Development Workflow
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+Use Spec Kit in order: constitution, specification, plan, tasks, implementation, and verification.
+Review every change for principle compliance and update documentation whenever a command, dependency,
+or configuration requirement changes. Pull requests MUST state scope, verification evidence, migration
+impact, and any privacy or AI-boundary impact.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution supersedes conflicting development conventions. Amendments MUST document rationale,
+impact on active work, and semantic version bump: MAJOR for incompatible governance changes, MINOR for
+new or materially expanded rules, and PATCH for clarifications. Each review MUST confirm compliance and
+record justified exceptions in the related specification or pull request.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.1.0 | **Ratified**: 2026-08-10 | **Last Amended**: 2026-08-10
