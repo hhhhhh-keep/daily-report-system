@@ -1,0 +1,11 @@
+**/node_modules/
+**/dist/
+**/target/
+**/.m2/
+**/.env
+**/application-local.yml
+**/.idea/
+**/.vscode/
+playwright-report/
+test-results/
+.DS_Store

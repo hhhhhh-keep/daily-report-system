@@ -13,12 +13,12 @@
 
 **目标**：建立 Vue 3、Spring Boot、PostgreSQL、Docker 和质量命令的最小项目骨架。
 
-- [ ] T001 创建 Vue 3 `daily-web` 工程、`/report`、`/my-report`、`/admin/*` 路由骨架和入口文件：`daily-web/package.json`、`daily-web/src/main.ts`、`daily-web/src/router/index.ts`
-- [ ] T002 [P] 创建 Spring Boot 模块化单体工程和模块包边界：`daily-api/pom.xml`、`daily-api/src/main/java/com/company/daily/DailyApiApplication.java`、`daily-api/src/main/java/com/company/daily/{report,masterdata,metrics,rules,analysis,scheduling,reporting,email,config}/`
-- [ ] T003 [P] 定义 Docker 本地服务与 nginx 代理基线：`docker/docker-compose.yml`、`docker/nginx/default.conf`、`daily-web/Dockerfile`、`daily-api/Dockerfile`
-- [ ] T004 [P] 建立前后端环境变量样例及配置校验入口：`daily-web/.env.example`、`daily-api/.env.example`、`daily-api/src/main/java/com/company/daily/config/EnvironmentProperties.java`
-- [ ] T005 配置实际可运行的前端 test/lint/build 命令：`daily-web/package.json`、`daily-web/vite.config.ts`
-- [ ] T006 [P] 配置实际可运行的后端 test/lint/build 命令：`daily-api/pom.xml`、`daily-api/mvnw`
+- [x] T001 创建 Vue 3 `daily-web` 工程、`/report`、`/my-report`、`/admin/*` 路由骨架和入口文件：`daily-web/package.json`、`daily-web/src/main.ts`、`daily-web/src/router/index.ts`
+- [x] T002 [P] 创建 Spring Boot 模块化单体工程和模块包边界：`daily-api/pom.xml`、`daily-api/src/main/java/com/company/daily/DailyApiApplication.java`、`daily-api/src/main/java/com/company/daily/{report,masterdata,metrics,rules,analysis,scheduling,reporting,email,config}/`
+- [x] T003 [P] 定义 Docker 本地服务与 nginx 代理基线：`docker/docker-compose.yml`、`docker/nginx/default.conf`、`daily-web/Dockerfile`、`daily-api/Dockerfile`
+- [x] T004 [P] 建立前后端环境变量样例及配置校验入口：`daily-web/.env.example`、`daily-api/.env.example`、`daily-api/src/main/java/com/company/daily/config/EnvironmentProperties.java`
+- [x] T005 配置实际可运行的前端 test/lint/build 命令：`daily-web/package.json`、`daily-web/vite.config.ts`
+- [x] T006 [P] 配置实际可运行的后端 test/lint/build 命令：`daily-api/pom.xml`、`daily-api/mvnw`
 
 ---
 
@@ -26,14 +26,14 @@
 
 **目标**：建立所有用户故事共用的 PostgreSQL、migration、错误处理、基础数据和契约骨架；完成前不得开始用户故事实现。
 
-- [ ] T007 配置 PostgreSQL 数据源、Flyway migration 框架和迁移执行配置：`daily-api/pom.xml`、`daily-api/src/main/resources/application.yml`、`daily-api/src/main/resources/db/migration/`
-- [ ] T008 创建 Employee、Project、非正式项目选项与业务字典的初始 migration：`daily-api/src/main/resources/db/migration/V001__create_master_data.sql`
-- [ ] T009 [P] 实现统一 API 错误响应、日期校验和请求关联日志：`daily-api/src/main/java/com/company/daily/common/api/ApiExceptionHandler.java`、`daily-api/src/main/java/com/company/daily/common/api/ApiError.java`
-- [ ] T010 [P] 创建共享 JPA 审计时间基类及 PostgreSQL 测试容器配置：`daily-api/src/main/java/com/company/daily/common/persistence/AuditedEntity.java`、`daily-api/src/test/java/com/company/daily/support/PostgresIntegrationTest.java`
-- [ ] T011 建立 Employee/Project/dictionary 基础数据 repository、service 和读取 DTO：`daily-api/src/main/java/com/company/daily/masterdata/`
-- [ ] T012 [P] 建立 HTTP API 契约测试基线，覆盖 `/api/report/options` 与统一错误格式：`daily-api/src/test/java/com/company/daily/contracts/ReportOptionsContractTest.java`
-- [ ] T013 [P] 建立前端 API client、路由守卫骨架和响应式布局基线：`daily-web/src/api/http.ts`、`daily-web/src/api/report.ts`、`daily-web/src/layouts/`
-- [ ] T014 验证 migration、环境变量和 Docker 服务连通性：`daily-api/src/test/java/com/company/daily/config/EnvironmentPropertiesTest.java`、`docker/docker-compose.yml`
+- [x] T007 配置 PostgreSQL 数据源、Flyway migration 框架和迁移执行配置：`daily-api/pom.xml`、`daily-api/src/main/resources/application.yml`、`daily-api/src/main/resources/db/migration/`
+- [x] T008 创建 Employee、Project、非正式项目选项与业务字典的初始 migration：`daily-api/src/main/resources/db/migration/V001__create_master_data.sql`
+- [x] T009 [P] 实现统一 API 错误响应、日期校验和请求关联日志：`daily-api/src/main/java/com/company/daily/common/api/ApiExceptionHandler.java`、`daily-api/src/main/java/com/company/daily/common/api/ApiError.java`
+- [x] T010 [P] 创建共享 JPA 审计时间基类及 PostgreSQL 测试容器配置：`daily-api/src/main/java/com/company/daily/common/persistence/AuditedEntity.java`、`daily-api/src/test/java/com/company/daily/support/PostgresIntegrationTest.java`
+- [x] T011 建立 Employee/Project/dictionary 基础数据 repository、service 和读取 DTO：`daily-api/src/main/java/com/company/daily/masterdata/`
+- [x] T012 [P] 建立 HTTP API 契约测试基线，覆盖 `/api/report/options` 与统一错误格式：`daily-api/src/test/java/com/company/daily/contracts/ReportOptionsContractTest.java`
+- [x] T013 [P] 建立前端 API client、路由守卫骨架和响应式布局基线：`daily-web/src/api/http.ts`、`daily-web/src/api/report.ts`、`daily-web/src/layouts/`
+- [x] T014 验证 migration、环境变量和 Docker 服务连通性：`daily-api/src/test/java/com/company/daily/config/EnvironmentPropertiesTest.java`、`docker/docker-compose.yml`
 
 **检查点**：阶段 2 完成后，数据库、契约、基础数据和质量命令可支撑所有用户故事。
 
@@ -45,17 +45,17 @@
 
 **独立验证**：选择 Employee 和当天日期，新增多条 DailyTask，保存后重新打开并修改；确认 `employee_id + report_date` 始终只有一份有效 DailyReport。
 
-- [ ] T015 [P] [US1] 创建 DailyReport/DailyTask migration、唯一键和外键约束：`daily-api/src/main/resources/db/migration/V002__create_daily_reports_and_tasks.sql`
-- [ ] T016 [P] [US1] 编写 DailyReport/DailyTask repository 与实体映射测试：`daily-api/src/test/java/com/company/daily/report/DailyReportRepositoryTest.java`、`daily-api/src/test/java/com/company/daily/report/DailyTaskRepositoryTest.java`
-- [ ] T017 [P] [US1] 编写当前日报读取与全量任务更新的 HTTP 契约测试：`daily-api/src/test/java/com/company/daily/contracts/CurrentReportContractTest.java`
-- [ ] T018 [P] [US1] 编写 `/report` 与 `/my-report` 当日多任务更新端到端测试：`daily-web/e2e/report-current-day.spec.ts`
-- [ ] T019 [US1] 实现 DailyReport、DailyTask、`time_period`、`participation_role`、`current_status` 实体和 DTO：`daily-api/src/main/java/com/company/daily/report/domain/`、`daily-api/src/main/java/com/company/daily/report/api/dto/`
-- [ ] T020 [US1] 实现当日保存/覆盖更新、动态任务全量替换、Employee/Project 引用和唯一性规则：`daily-api/src/main/java/com/company/daily/report/service/CurrentReportService.java`
-- [ ] T021 [US1] 实现 `GET /api/reports?employeeId=&date=`、`PUT /api/reports/current` 及输入校验：`daily-api/src/main/java/com/company/daily/report/api/ReportController.java`
-- [ ] T022 [P] [US1] 实现日报选项读取 API 与非正式项目选择数据：`daily-api/src/main/java/com/company/daily/report/api/ReportOptionsController.java`、`daily-api/src/main/java/com/company/daily/report/service/ReportOptionsService.java`
-- [ ] T023 [US1] 实现员工填写页的日期/姓名/出勤、动态 DailyTask 卡片和异常条件字段：`daily-web/src/views/report/ReportEntryView.vue`、`daily-web/src/components/report/DailyTaskForm.vue`
-- [ ] T024 [US1] 实现当日读取和修改页、全量提交与保存反馈：`daily-web/src/views/report/MyReportView.vue`、`daily-web/src/stores/report.ts`
-- [ ] T025 [US1] 运行并修复日报每日唯一、多任务、当天修改及 API 契约回归测试：`daily-api/src/test/java/com/company/daily/report/CurrentReportServiceTest.java`、`daily-web/e2e/report-current-day.spec.ts`
+- [x] T015 [P] [US1] 创建 DailyReport/DailyTask migration、唯一键和外键约束：`daily-api/src/main/resources/db/migration/V002__create_daily_reports_and_tasks.sql`
+- [x] T016 [P] [US1] 编写 DailyReport/DailyTask repository 与实体映射测试：`daily-api/src/test/java/com/company/daily/report/DailyReportRepositoryTest.java`、`daily-api/src/test/java/com/company/daily/report/DailyTaskRepositoryTest.java`
+- [x] T017 [P] [US1] 编写当前日报读取与全量任务更新的 HTTP 契约测试：`daily-api/src/test/java/com/company/daily/contracts/CurrentReportContractTest.java`
+- [x] T018 [P] [US1] 编写 `/report` 与 `/my-report` 当日多任务更新端到端测试：`daily-web/e2e/report-current-day.spec.ts`
+- [x] T019 [US1] 实现 DailyReport、DailyTask、`time_period`、`participation_role`、`current_status` 实体和 DTO：`daily-api/src/main/java/com/company/daily/report/domain/`、`daily-api/src/main/java/com/company/daily/report/api/dto/`
+- [x] T020 [US1] 实现当日保存/覆盖更新、动态任务全量替换、Employee/Project 引用和唯一性规则：`daily-api/src/main/java/com/company/daily/report/service/CurrentReportService.java`
+- [x] T021 [US1] 实现 `GET /api/reports?employeeId=&date=`、`PUT /api/reports/current` 及输入校验：`daily-api/src/main/java/com/company/daily/report/api/ReportController.java`
+- [x] T022 [P] [US1] 实现日报选项读取 API 与非正式项目选择数据：`daily-api/src/main/java/com/company/daily/report/api/ReportOptionsController.java`、`daily-api/src/main/java/com/company/daily/report/service/ReportOptionsService.java`
+- [x] T023 [US1] 实现员工填写页的日期/姓名/出勤、动态 DailyTask 卡片和异常条件字段：`daily-web/src/views/report/ReportEntryView.vue`、`daily-web/src/components/report/DailyTaskForm.vue`
+- [x] T024 [US1] 实现当日读取和修改页、全量提交与保存反馈：`daily-web/src/views/report/MyReportView.vue`、`daily-web/src/stores/report.ts`
+- [x] T025 [US1] 运行并修复日报每日唯一、多任务、当天修改及 API 契约回归测试：`daily-api/src/test/java/com/company/daily/report/CurrentReportServiceTest.java`、`daily-web/e2e/report-current-day.spec.ts`
 
 **检查点**：US1 可独立演示并满足 FR-001 至 FR-004、SC-001 和 SC-002。
 
@@ -67,16 +67,16 @@
 
 **独立验证**：管理员维护 Employee 和 Project，在日报选项中选择它们，并确认单管理员边界与管理视图可用。
 
-- [ ] T026 [P] [US2] 编写单管理员密码、Session/JWT、修改密码和退出登录测试：`daily-api/src/test/java/com/company/daily/admin/AdminSessionServiceTest.java`
-- [ ] T027 [P] [US2] 编写 Employee/Project/dictionary CRUD 与管理报告读取契约测试：`daily-api/src/test/java/com/company/daily/contracts/AdminManagementContractTest.java`
-- [ ] T028 [P] [US2] 编写管理后台登录、基础数据维护和日报任务查看端到端测试：`daily-web/e2e/admin-management.spec.ts`
-- [ ] T029 [US2] 创建唯一管理员认证数据 migration 与密码散列持久化：`daily-api/src/main/resources/db/migration/V003__create_administrator.sql`
-- [ ] T030 [US2] 实现管理员 Session/JWT、登录、修改密码、退出和管理 API 保护：`daily-api/src/main/java/com/company/daily/admin/`
-- [ ] T031 [US2] 实现 Employee、Project、dictionary CRUD 及非正式项目选项维护 API：`daily-api/src/main/java/com/company/daily/masterdata/api/`、`daily-api/src/main/java/com/company/daily/masterdata/service/`
-- [ ] T032 [US2] 实现日报列表、任务明细和管理读取服务/API：`daily-api/src/main/java/com/company/daily/report/api/AdminReportController.java`、`daily-api/src/main/java/com/company/daily/report/service/AdminReportQueryService.java`
-- [ ] T033 [P] [US2] 实现基础指标汇总与管理驾驶舱读取 API：`daily-api/src/main/java/com/company/daily/metrics/MetricsService.java`、`daily-api/src/main/java/com/company/daily/metrics/MetricsController.java`
-- [ ] T034 [US2] 实现 `/admin/*` 登录、基础数据、日报管理、任务明细与驾驶舱页面：`daily-web/src/views/admin/`、`daily-web/src/router/admin.ts`
-- [ ] T035 [US2] 执行单管理员边界、基础数据选择、管理查询和驾驶舱回归测试：`daily-api/src/test/java/com/company/daily/admin/`、`daily-web/e2e/admin-management.spec.ts`
+- [x] T026 [P] [US2] 编写单管理员密码、Session/JWT、修改密码和退出登录测试：`daily-api/src/test/java/com/company/daily/admin/AdminSessionServiceTest.java`
+- [x] T027 [P] [US2] 编写 Employee/Project/dictionary CRUD 与管理报告读取契约测试：`daily-api/src/test/java/com/company/daily/contracts/AdminManagementContractTest.java`
+- [x] T028 [P] [US2] 编写管理后台登录、基础数据维护和日报任务查看端到端测试：`daily-web/e2e/admin-management.spec.ts`
+- [x] T029 [US2] 创建唯一管理员认证数据 migration 与密码散列持久化：`daily-api/src/main/resources/db/migration/V003__create_administrator.sql`
+- [x] T030 [US2] 实现管理员 Session/JWT、登录、修改密码、退出和管理 API 保护：`daily-api/src/main/java/com/company/daily/admin/`
+- [x] T031 [US2] 实现 Employee、Project、dictionary CRUD 及非正式项目选项维护 API：`daily-api/src/main/java/com/company/daily/masterdata/api/`、`daily-api/src/main/java/com/company/daily/masterdata/service/`
+- [x] T032 [US2] 实现日报列表、任务明细和管理读取服务/API：`daily-api/src/main/java/com/company/daily/report/api/AdminReportController.java`、`daily-api/src/main/java/com/company/daily/report/service/AdminReportQueryService.java`
+- [x] T033 [P] [US2] 实现基础指标汇总与管理驾驶舱读取 API：`daily-api/src/main/java/com/company/daily/metrics/MetricsService.java`、`daily-api/src/main/java/com/company/daily/metrics/MetricsController.java`
+- [x] T034 [US2] 实现 `/admin/*` 登录、基础数据、日报管理、任务明细与驾驶舱页面：`daily-web/src/views/admin/`、`daily-web/src/router/admin.ts`
+- [x] T035 [US2] 执行单管理员边界、基础数据选择、管理查询和驾驶舱回归测试：`daily-api/src/test/java/com/company/daily/admin/`、`daily-web/e2e/admin-management.spec.ts`
 
 **检查点**：US2 可独立验证 FR-005、FR-006 和 FR-010 的管理入口，且不引入员工账号或多角色能力。
 
@@ -88,17 +88,17 @@
 
 **独立验证**：对样例日报运行已配置的分析，确认所选维度、报告、邮件和运行结果；模拟模型/邮件失败后可手动重跑且不重复成功投递。
 
-- [ ] T036 [P] [US3] 创建分析配置、运行记录、报告引用和邮件投递幂等 migration：`daily-api/src/main/resources/db/migration/V004__create_analysis_config_and_runs.sql`
-- [ ] T037 [P] [US3] 编写指标计算和确定性规则测试，覆盖完整性、任务/项目/时段、异常、连续支撑、等待反馈及多人/多项目：`daily-api/src/test/java/com/company/daily/metrics/ReportMetricsServiceTest.java`、`daily-api/src/test/java/com/company/daily/rules/AnalysisRuleServiceTest.java`
-- [ ] T038 [P] [US3] 编写 LLM 适配器隔离与顾问性输出测试：`daily-api/src/test/java/com/company/daily/analysis/LlmAnalysisAdapterTest.java`
-- [ ] T039 [P] [US3] 编写 Quartz、报告、SMTP、失败记录和手动重试契约/集成测试：`daily-api/src/test/java/com/company/daily/contracts/AnalysisRunContractTest.java`、`daily-api/src/test/java/com/company/daily/scheduling/AnalysisJobIntegrationTest.java`
-- [ ] T040 [US3] 实现数据库指标计算、业务阈值规则和人员/项目/风险/资源维度结果：`daily-api/src/main/java/com/company/daily/metrics/`、`daily-api/src/main/java/com/company/daily/rules/`
-- [ ] T041 [US3] 实现与程序规则分离的 LLM adapter、Prompt 版本读取和顾问性综合分析：`daily-api/src/main/java/com/company/daily/analysis/`
-- [ ] T042 [US3] 实现 AI 规则、Prompt、维度、Quartz 计划、收件人、模板和模型设置的配置服务/API：`daily-api/src/main/java/com/company/daily/configuration/`
-- [ ] T043 [US3] 实现 Quartz 定时分析、运行状态持久化、错误查看和手动重试：`daily-api/src/main/java/com/company/daily/scheduling/`、`daily-api/src/main/java/com/company/daily/scheduling/api/RunController.java`
-- [ ] T044 [US3] 实现 HTML/PDF 报告生成、EmailService、SMTP 环境变量配置和重复成功邮件保护：`daily-api/src/main/java/com/company/daily/reporting/`、`daily-api/src/main/java/com/company/daily/email/`
-- [ ] T045 [US3] 实现 AI 分析、规则/Prompt/计划/邮件配置和任务运行记录管理页面：`daily-web/src/views/admin/analysis/`、`daily-web/src/views/admin/config/`、`daily-web/src/views/admin/runs/`
-- [ ] T046 [US3] 执行分析维度、LLM 降级、报告、邮件失败、手动重试和重复发送防护回归测试：`daily-api/src/test/java/com/company/daily/analysis/`、`daily-api/src/test/java/com/company/daily/email/`
+- [x] T036 [P] [US3] 创建分析配置、运行记录、报告引用和邮件投递幂等 migration：`daily-api/src/main/resources/db/migration/V004__create_analysis_config_and_runs.sql`
+- [x] T037 [P] [US3] 编写指标计算和确定性规则测试，覆盖完整性、任务/项目/时段、异常、连续支撑、等待反馈及多人/多项目：`daily-api/src/test/java/com/company/daily/metrics/ReportMetricsServiceTest.java`、`daily-api/src/test/java/com/company/daily/rules/AnalysisRuleServiceTest.java`
+- [x] T038 [P] [US3] 编写 LLM 适配器隔离与顾问性输出测试：`daily-api/src/test/java/com/company/daily/analysis/LlmAnalysisAdapterTest.java`
+- [x] T039 [P] [US3] 编写 Quartz、报告、SMTP、失败记录和手动重试契约/集成测试：`daily-api/src/test/java/com/company/daily/contracts/AnalysisRunContractTest.java`、`daily-api/src/test/java/com/company/daily/scheduling/AnalysisJobIntegrationTest.java`
+- [x] T040 [US3] 实现数据库指标计算、业务阈值规则和人员/项目/风险/资源维度结果：`daily-api/src/main/java/com/company/daily/metrics/`、`daily-api/src/main/java/com/company/daily/rules/`
+- [x] T041 [US3] 实现与程序规则分离的 LLM adapter、Prompt 版本读取和顾问性综合分析：`daily-api/src/main/java/com/company/daily/analysis/`
+- [x] T042 [US3] 实现 AI 规则、Prompt、维度、Quartz 计划、收件人、模板和模型设置的配置服务/API：`daily-api/src/main/java/com/company/daily/configuration/`
+- [x] T043 [US3] 实现 Quartz 定时分析、运行状态持久化、错误查看和手动重试：`daily-api/src/main/java/com/company/daily/scheduling/`、`daily-api/src/main/java/com/company/daily/scheduling/api/RunController.java`
+- [x] T044 [US3] 实现 HTML/PDF 报告生成、EmailService、SMTP 环境变量配置和重复成功邮件保护：`daily-api/src/main/java/com/company/daily/reporting/`、`daily-api/src/main/java/com/company/daily/email/`
+- [x] T045 [US3] 实现 AI 分析、规则/Prompt/计划/邮件配置和任务运行记录管理页面：`daily-web/src/views/admin/analysis/`、`daily-web/src/views/admin/config/`、`daily-web/src/views/admin/runs/`
+- [x] T046 [US3] 执行分析维度、LLM 降级、报告、邮件失败、手动重试和重复发送防护回归测试：`daily-api/src/test/java/com/company/daily/analysis/`、`daily-api/src/test/java/com/company/daily/email/`
 
 **检查点**：US3 可独立验证 FR-007 至 FR-011、SC-003 和 SC-004；LLM 不执行人员调配或项目决策。
 
@@ -108,11 +108,11 @@
 
 **目标**：验证契约、迁移恢复、Docker、质量门禁及排除范围。
 
-- [ ] T047 [P] 更新 HTTP 契约回归测试以匹配 `contracts/http-api.md`：`daily-api/src/test/java/com/company/daily/contracts/`
-- [ ] T048 [P] 验证 migration 顺序、唯一键和回滚/恢复说明：`daily-api/src/test/java/com/company/daily/migration/MigrationVerificationTest.java`、`daily-api/docs/migration-recovery.md`
-- [ ] T049 [P] 执行 `quickstart.md` 的端到端场景和容器冒烟验证：`daily-web/e2e/quickstart.spec.ts`、`docker/docker-compose.yml`
-- [ ] T050 执行并记录前端/后端 test、lint、build、migration、契约和容器质量门禁：`daily-web/package.json`、`daily-api/pom.xml`、`specs/001-daily-report-ai-system/quickstart.md`
-- [ ] T051 复核排除范围与密钥管理，确认未引入审批、员工账号、RBAC、SSO、OAuth、CRM、绩效/工时、微服务、消息队列、Kubernetes 或外部工作流编排：`daily-api/pom.xml`、`daily-web/package.json`、`docker/docker-compose.yml`
+- [x] T047 [P] 更新 HTTP 契约回归测试以匹配 `contracts/http-api.md`：`daily-api/src/test/java/com/company/daily/contracts/`
+- [x] T048 [P] 验证 migration 顺序、唯一键和回滚/恢复说明：`daily-api/src/test/java/com/company/daily/migration/MigrationVerificationTest.java`、`daily-api/docs/migration-recovery.md`
+- [x] T049 [P] 执行 `quickstart.md` 的端到端场景和容器冒烟验证：`daily-web/e2e/quickstart.spec.ts`、`docker/docker-compose.yml`
+- [x] T050 执行并记录前端/后端 test、lint、build、migration、契约和容器质量门禁：`daily-web/package.json`、`daily-api/pom.xml`、`specs/001-daily-report-ai-system/quickstart.md`
+- [x] T051 复核排除范围与密钥管理，确认未引入审批、员工账号、RBAC、SSO、OAuth、CRM、绩效/工时、微服务、消息队列、Kubernetes 或外部工作流编排：`daily-api/pom.xml`、`daily-web/package.json`、`docker/docker-compose.yml`
 
 ## 依赖关系与执行顺序
 

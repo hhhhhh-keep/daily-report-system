@@ -1,0 +1,54 @@
+# Local development overrides.
+#
+# How to use:
+#   1. Copy this file:  cp src/main/resources/application-local.yml.example \
+#                         src/main/resources/application-local.yml
+#   2. Fill in the REPLACE_ME values below.
+#   3. Run Spring Boot with profile=local (VS Code launch.json already does
+#      this via SPRING_PROFILES_ACTIVE=local).
+#
+# application-local.yml is .gitignored so secrets never leave your machine.
+#
+# If you prefer environment variables, leave the corresponding entries as
+# ${ENV_VAR_NAME} and set them in your shell — application.yml already
+# documents the names.
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/daily_report_dev
+    username: drs_pg_admin
+    password: REPLACE_ME_local_pg_password
+  # Skip Quartz jobs while you are poking around — they make noise and
+  # touch real data. Flip back to true if you need to test scheduled flows.
+  quartz:
+    auto-startup: false
+
+daily:
+  # Vite dev server URL (the page that loads the JS frontend).
+  web-base-url: http://localhost:5180
+  administrator:
+    username: admin
+    initial-password: REPLACE_ME_local_admin_password
+
+server:
+  servlet:
+    session:
+      cookie:
+        # Plain HTTP on localhost — secure cookies would never be sent.
+        secure: false
+        # Vite proxy rewrites the upstream Host, so strict same-site rejects
+        # the session cookie. lax still blocks cross-site form POSTs while
+        # letting the dev flow work.
+        same-site: lax
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.orm.jdbc.bind: trace
+    com.company.daily: debug
+
+management:
+  endpoint:
+    health:
+      # Show details when querying /actuator/health — handy in dev.
+      show-details: always

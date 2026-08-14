@@ -101,3 +101,23 @@ Configure `user.name` and `user.email` locally for this repository, then retry t
 - Related Files: .learnings/ERRORS.md
 
 ---
+# Errors
+
+## [ERR-20260812-001] apply_patch_encoding_mismatch
+
+**Logged**: 2026-08-12T00:00:00+08:00
+**Priority**: low
+**Status**: resolved
+**Area**: docs
+
+### Summary
+Patch matching failed after terminal output rendered UTF-8 Chinese text as mojibake.
+
+### Suggested Fix
+Use the original UTF-8 text, verified from file bytes, when patching affected files.
+
+### Metadata
+- Reproducible: yes
+- Related Files: tasks/active.md
+
+---

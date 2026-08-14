@@ -1,4 +1,4 @@
-﻿# Task: generate-implementation-tasks
+# Task: generate-implementation-tasks
 
 ## Goal
 
@@ -20,4 +20,3 @@ Describe the intended behavior.
 <command one>
 <command two>
 ```
-

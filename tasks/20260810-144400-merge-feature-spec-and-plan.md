@@ -1,4 +1,4 @@
-﻿# Task: merge-feature-spec-and-plan
+# Task: merge-feature-spec-and-plan
 
 ## Goal
 
@@ -20,4 +20,3 @@ Describe the intended behavior.
 <command one>
 <command two>
 ```
-

@@ -1,0 +1,125 @@
+# Dev-mode compose for fast iteration.
+#   - Vite HMR on :5173 (frontend, save file → browser auto-refresh)
+#   - Spring Boot DevTools on :8080 (backend, recompile → JVM auto-restart)
+#
+# Run on the server with:
+#   cd /daily-report-system/docker
+#   docker compose -f docker-compose.dev.yml -p drs-dev up -d
+#
+# Source is bind-mounted, so edits on the host take effect immediately.
+# Browser access via SSH tunnel:
+#   ssh -L 5173:127.0.0.1:5173 -L 8080:127.0.0.1:8080 root@<host>
+# (only :5173 needed if Vite proxies /api → daily-api-dev:8080 internally)
+#
+# The dev DB (daily_report_dev) is isolated from prod (daily_report) so
+# destructive edits do not touch prod data.
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: daily_report_dev
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data-dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d daily_report_dev"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  daily-api-dev:
+    image: maven:3.9.11-eclipse-temurin-21
+    working_dir: /workspace
+    volumes:
+      # Source + mvnw/.mvn must come along. target/ lives inside the bind mount
+      # so DevTools sees compiled .class updates.
+      - ../daily-api:/workspace
+      - api-m2:/root/.m2
+    environment:
+      JAVA_TOOL_OPTIONS: -Duser.timezone=${APP_TIMEZONE:-Asia/Shanghai}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/daily_report_dev
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:?set POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_INITIAL_PASSWORD: ${ADMIN_INITIAL_PASSWORD:?set ADMIN_INITIAL_PASSWORD}
+      LLM_ENDPOINT: ${LLM_ENDPOINT:-}
+      LLM_MODEL: ${LLM_MODEL:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_HEALTH_ENABLED: ${SMTP_HEALTH_ENABLED:-false}
+      WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:8080}
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        cd /workspace
+        if [ ! -f mvnw ] || [ ! -d .mvn ]; then
+          echo "FATAL: bind mount empty — check /daily-report-system/daily-api"
+          exit 1
+        fi
+        # Background watcher: when any .java under src/ is newer than the
+        # last successful compile, run `mvn compile`. DevTools watches
+        # /workspace/target/classes and restarts the forked JVM on change.
+        touch /tmp/.last-compile
+        (
+          while true; do
+            changed=$$(find src -name '*.java' -newer /tmp/.last-compile 2>/dev/null | head -1)
+            if [ -n "$$changed" ]; then
+              echo "[watcher] change in $$changed → mvn compile"
+              ./mvnw -B -DskipTests -q compile 2>&1 | tail -3 || true
+              touch /tmp/.last-compile
+            fi
+            sleep 1
+          done
+        ) &
+        # Foreground: Spring Boot + DevTools. On first start, this downloads
+        # ~158MB of Maven deps to the api-m2 named volume; later restarts
+        # are fast.
+        exec ./mvnw -B -DskipTests spring-boot:run \
+          -Dspring-boot.run.jvmArguments="-Dspring.devtools.restart.enabled=true -Dspring.devtools.livereload.enabled=true -Djava.awt.headless=true"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  daily-web-dev:
+    image: node:24-alpine
+    working_dir: /app
+    volumes:
+      - ../daily-web:/app
+      # node_modules lives on a named volume so the bind mount of /app does
+      # not clobber it. First start runs `npm install`; later starts reuse.
+      - web-node-modules:/app/node_modules
+    environment:
+      VITE_API_BASE_URL: /api
+      VITE_API_PROXY: http://daily-api-dev:8080
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        if [ ! -f package.json ]; then
+          echo "FATAL: bind mount empty — check /daily-report-system/daily-web"
+          exit 1
+        fi
+        if [ ! -d node_modules ] || [ ! -f node_modules/.package-lock.json ]; then
+          echo "[setup] installing npm dependencies (first run only, ~1-2 min)..."
+          npm install
+        fi
+        exec npm run dev -- --host 0.0.0.0 --port 5173 --strictPort
+    ports:
+      - "5173:5173"
+    depends_on:
+      - daily-api-dev
+
+volumes:
+  postgres-data-dev:
+  api-m2:
+  web-node-modules:

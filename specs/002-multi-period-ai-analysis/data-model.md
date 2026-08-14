@@ -20,6 +20,10 @@
 | `analysis_report` | `execution_id`, `version`, `display_data`, `html`, `pdf_reference`, `distribution_status` | 默认查询最新成功版本 |
 | `analysis_distribution` | `report_id`, `sent_at`, `recipients`, `cc`, `mode`, `status`, `error_summary` | 自动、重试、手动重发各一条 |
 
+## 当前实现映射
+
+`analysis_runs` 承担 `analysis_execution` 的存储职责：已保存 `analysis_period`、周期起止日、规则/Prompt/Schema/模型快照及源快照；`analysis_rule_versions` 保存旧版规则历史。V014 新增 `analysis_skill_versions` 与 `analysis_skill_trials`：日报、周报、月报各固定规则/模板两个槽位，ZIP 包经校验后版本化保存；只有同一次试运行成功的一对草稿可成对发布。新运行关联已发布的两个 Skill 版本与输入快照。数据库迁移为 V007（工作日历）、V008（填报快照）、V009（日锁定）、V010/V011（多周期分析与默认规则）、V014（Skills 中心）。
+
 ## 源快照结构
 
 `source_snapshot` 必须包含：周期工作日列表、22:00 最终快照、17:30 快照、应填成员名单、已提交/漏填名单、每份日报和任务的稳定 ID、出勤、首次提交时间、最终工作内容、阶段、角色、状态与阻碍说明。
