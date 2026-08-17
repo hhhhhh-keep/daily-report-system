@@ -1,26 +1,24 @@
-# Task: 配置技能模型超时
+# Task: 补齐技能运行时迁移
 
 ## Goal
 
-避免成对 Skill 试运行在模型响应超过固定 180 秒时无条件失败，并保持浏览器端等待时间与后端上限一致。
+为已被错误标记为完成的 V022 脚本型 Skill 运行时 schema 创建可重复执行的补偿迁移。
 
 ## Acceptance criteria
 
-- [x] Skill 模型调用超时可通过配置覆盖，默认值为 300 秒。
-- [x] 前端成对 Skill 试运行请求等待 360 秒，不早于后端超时中断。
-- [x] 保持现有模型请求体、重试逻辑和其他调用路径不变。
-- [x] 后端 JDK 21 编译、前端测试、lint 与构建通过。
+- [x] `analysis_skill_versions` 存在 `runtime_profile` 与 `manifest_json` 列。
+- [x] `analysis_skill_artifacts` 表及其 trial 索引存在。
+- [x] JDK 21 后端编译成功，运行中后端健康检查为 UP。
 
 ## Scope exclusions
 
-- 不更改已保存的模型端点、模型名称或 API Key。
-- 不修改 Skill 包、试运行结果或历史业务数据。
-- 不引入新的重试策略。
+- 不回滚或篡改既有 Flyway 历史记录。
+- 不删除或修改已有 Skill、试运行或业务数据。
 
 ## Verification
 
 ```text
-cd daily-api; $env:JAVA_HOME='D:\Program Files\Java\jdk-21'; .\mvnw.cmd -B -DskipTests compile
-cd daily-web; npm test -- tests/api/admin-skills.spec.ts; npm run lint; npm run build
+JDK 21: .\mvnw.cmd -B -DskipTests compile
+information_schema 查询补偿列与表；http://localhost:8080/actuator/health
 ```
 

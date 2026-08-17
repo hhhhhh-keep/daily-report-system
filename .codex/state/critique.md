@@ -1,9 +1,7 @@
-# Critique — 配置技能模型超时
+# Critique — 补齐技能运行时迁移
 
-Run: 20260817-111611
+Run: 20260817-114654
 Status: PASS
 
-## Critic verdict
-
-PASS。变更只作用于 `analyzeSkill` 调用路径；模型请求体、认证、两次空内容重试与普通日报分析的 90 秒超时未改变。默认值、前端等待上限和全部可执行本机质量门禁均有验证证据。
+V024 仅使用 `if not exists` 新增缺失 schema，不修改已有 Skill 或试运行数据；数据库校验显示迁移版本为 024。
 
