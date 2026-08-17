@@ -33,6 +33,7 @@ daily:
     endpoint: ${LLM_ENDPOINT:}
     model: ${LLM_MODEL:}
     api-key: ${LLM_API_KEY:}
+    skill-request-timeout: ${LLM_SKILL_REQUEST_TIMEOUT:PT300S}
   smtp:
     host: ${SMTP_HOST:}
     port: ${SMTP_PORT:587}

@@ -1,5 +1,6 @@
 package com.company.daily.config;
 
+import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "daily")
@@ -33,6 +34,7 @@ public class EnvironmentProperties {
     private String endpoint = "";
     private String model = "";
     private String apiKey = "";
+    private Duration skillRequestTimeout = Duration.ofSeconds(300);
 
     public String getEndpoint() {
       return endpoint;
@@ -56,6 +58,14 @@ public class EnvironmentProperties {
 
     public void setApiKey(String apiKey) {
       this.apiKey = apiKey;
+    }
+
+    public Duration getSkillRequestTimeout() {
+      return skillRequestTimeout;
+    }
+
+    public void setSkillRequestTimeout(Duration skillRequestTimeout) {
+      this.skillRequestTimeout = skillRequestTimeout;
     }
   }
 

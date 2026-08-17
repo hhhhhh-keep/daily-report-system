@@ -1,7 +1,7 @@
 # Plan — 配置技能模型超时
 
 Run: 20260817-111611
-Status: awaiting design review
+Status: completed
 
 ## 设计
 

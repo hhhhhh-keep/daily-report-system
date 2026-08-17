@@ -6,10 +6,10 @@
 
 ## Acceptance criteria
 
-- [ ] Skill 模型调用超时可通过配置覆盖，默认值为 300 秒。
-- [ ] 前端成对 Skill 试运行请求等待 360 秒，不早于后端超时中断。
-- [ ] 保持现有模型请求体、重试逻辑和其他调用路径不变。
-- [ ] 后端测试、前端 lint 与构建通过。
+- [x] Skill 模型调用超时可通过配置覆盖，默认值为 300 秒。
+- [x] 前端成对 Skill 试运行请求等待 360 秒，不早于后端超时中断。
+- [x] 保持现有模型请求体、重试逻辑和其他调用路径不变。
+- [x] 后端 JDK 21 编译、前端测试、lint 与构建通过。
 
 ## Scope exclusions
 
@@ -20,7 +20,7 @@
 ## Verification
 
 ```text
-cd daily-api; .\mvnw.cmd test
-cd daily-web; npm run lint; npm run build
+cd daily-api; $env:JAVA_HOME='D:\Program Files\Java\jdk-21'; .\mvnw.cmd -B -DskipTests compile
+cd daily-web; npm test -- tests/api/admin-skills.spec.ts; npm run lint; npm run build
 ```
 

@@ -351,7 +351,7 @@ export const adminApi = {
     http.get(`/admin/analysis-skills/download/${id}`, { responseType: 'blob' }),
   trialAnalysisSkills: (period: AnalysisPeriod, endDate: string, ruleVersionId: number, templateVersionId: number) =>
     http.post<AnalysisSkillTrial>(`/admin/analysis-skills/${period}/trial`, undefined,
-      { params: { endDate, ruleVersionId, templateVersionId }, timeout: 240_000 }),
+      { params: { endDate, ruleVersionId, templateVersionId }, timeout: 360_000 }),
   analysisSkillTrials: (period: AnalysisPeriod) =>
     http.get<AnalysisSkillTrial[]>(`/admin/analysis-skills/${period}/trials`),
   publishAnalysisSkills: (period: AnalysisPeriod, ruleVersionId: number, templateVersionId: number) =>

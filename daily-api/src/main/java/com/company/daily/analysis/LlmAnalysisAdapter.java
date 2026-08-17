@@ -20,7 +20,6 @@ import tools.jackson.databind.ObjectMapper;
 
 @Component
 public class LlmAnalysisAdapter {
-  private static final Duration SKILL_REQUEST_TIMEOUT = Duration.ofSeconds(180);
   private final EnvironmentProperties environment;
   private final ObjectMapper objectMapper;
   private final HttpClient httpClient;
@@ -117,7 +116,7 @@ public class LlmAnalysisAdapter {
       String requestBody = objectMapper.writeValueAsString(payload);
       for (int attempt = 0; attempt < 2; attempt++) {
         HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(endpoint))
-            .timeout(SKILL_REQUEST_TIMEOUT).header("Content-Type", "application/json")
+            .timeout(environment.getLlm().getSkillRequestTimeout()).header("Content-Type", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(requestBody));
         if (StringUtils.hasText(apiKey)) {
           builder.header("Authorization", "Bearer " + apiKey);

@@ -9,6 +9,7 @@ import com.company.daily.rules.RuleConclusion;
 import com.sun.net.httpserver.HttpServer;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,12 @@ import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;
 
 class LlmAnalysisAdapterTest {
+  @Test
+  void defaultsSkillRequestTimeoutToFiveMinutes() {
+    assertThat(new EnvironmentProperties().getLlm().getSkillRequestTimeout())
+        .isEqualTo(Duration.ofSeconds(300));
+  }
+
   @Test
   void disablesThinkingAndBoundsSkillResponseForMiniMaxM3() throws Exception {
     AtomicReference<String> requestBody = new AtomicReference<>();
