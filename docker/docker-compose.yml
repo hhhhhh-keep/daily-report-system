@@ -33,6 +33,8 @@ services:
       SMTP_FROM: ${SMTP_FROM:-}
       SMTP_HEALTH_ENABLED: ${SMTP_HEALTH_ENABLED:-false}
       WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:8080}
+      SKILLS_SCRIPTED_ENABLED: ${SKILLS_SCRIPTED_ENABLED:-true}
+      SKILLS_PYTHON_EXECUTABLE: ${SKILLS_PYTHON_EXECUTABLE:-python}
     depends_on:
       postgres:
         condition: service_healthy

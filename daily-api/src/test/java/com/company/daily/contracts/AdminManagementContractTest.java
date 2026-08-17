@@ -77,7 +77,11 @@ class AdminManagementContractTest extends PostgresIntegrationTest {
         .andExpect(status().isCreated())
         .andReturn());
 
-    String date = LocalDate.now().toString();
+    LocalDate reportDate = LocalDate.now();
+    while (reportDate.getDayOfWeek().getValue() > 5) {
+      reportDate = reportDate.plusDays(1);
+    }
+    String date = reportDate.toString();
     MvcResult saved = mockMvc.perform(put("/api/reports/current")
             .contentType(MediaType.APPLICATION_JSON)
             .content("""
@@ -85,7 +89,8 @@ class AdminManagementContractTest extends PostgresIntegrationTest {
                  "tasks":[{"timePeriod":"full-day","projectId":%d,
                  "workType":"contract-work","participationRole":"owner",
                  "progressResult":"完成管理契约验证","currentStatus":"completed"}]}
-                """.formatted(employeeId, date, projectId)))
+                """.formatted(employeeId, date, projectId)
+                .replace("\"attendance\":\"full-day\"", "\"attendance\":\"present\"")))
         .andExpect(status().isOk())
         .andReturn();
     long reportId = id(saved);
@@ -95,8 +100,8 @@ class AdminManagementContractTest extends PostgresIntegrationTest {
             .param("date", date)
             .param("employeeId", Long.toString(employeeId)))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$[0].id").value(reportId))
-        .andExpect(jsonPath("$[0].taskCount").value(1));
+        .andExpect(jsonPath("$.items[0].id").value(reportId))
+        .andExpect(jsonPath("$.items[0].taskCount").value(1));
 
     mockMvc.perform(get("/api/admin/reports/{id}", reportId).session(session))
         .andExpect(status().isOk())
@@ -116,7 +121,7 @@ class AdminManagementContractTest extends PostgresIntegrationTest {
         .andExpect(status().isNoContent());
     mockMvc.perform(get("/api/admin/employees").session(session))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$[?(@.id == %d)].active".formatted(employeeId)).value(false));
+        .andExpect(jsonPath("$.items[?(@.id == %d)].active".formatted(employeeId)).value(false));
   }
 
   private MockHttpSession login() throws Exception {

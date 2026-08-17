@@ -23,10 +23,32 @@ function parseConclusions(resultText: string): Conclusion[] {
 const summaries = computed<AnalysisSummary[]>(() => results.value.map(result => ({ result, conclusions: parseConclusions(result.resultText) })))
 function conclusionCount(summary: AnalysisSummary) { return summary.conclusions.length }
 function summaryText(summary: AnalysisSummary) { return summary.conclusions[0]?.summary || '本次未发现需要关注的事项。' }
+function runStatus(value: string | null | undefined) {
+  const statuses: Record<string, string> = {
+    succeeded: '成功', 'partial-failure': '部分失败', failed: '失败', running: '运行中',
+  }
+  return statuses[value?.toLowerCase() || ''] || '未知'
+}
+function llmStatus(value: string | null | undefined) {
+  const statuses: Record<string, string> = { succeeded: '成功', failed: '失败', skipped: '未执行' }
+  return statuses[value?.toLowerCase() || ''] || '未执行'
+}
+function emailStatus(value: string | null | undefined) {
+  const statuses: Record<string, string> = {
+    sent: '已发送', failed: '发送失败', 'skipped-duplicate': '已跳过（该日期已发送）',
+    'not-requested': '未启用',
+  }
+  return statuses[value?.toLowerCase() || ''] || '未执行'
+}
 async function load() { results.value = (await adminApi.latestAnalysis()).data }
 async function runNow() {
   pending.value = true
-  try { await adminApi.runNow(endDate.value, period.value); message.value = '本次手动分析已完成，结果已刷新。'; await load() }
+  try {
+    const response = await adminApi.runNow(endDate.value, period.value)
+    const run = response.data
+    message.value = `分析完成。运行：${runStatus(run.status)}；AI：${llmStatus(run.llmStatus)}；邮件：${emailStatus(run.emailStatus)}`
+    await load()
+  }
   catch (caught) { message.value = apiError(caught).message }
   finally { pending.value = false }
 }
@@ -39,6 +61,7 @@ onMounted(load)
     <div class="admin-title"><div><span class="eyebrow">分析中心</span><h1>AI 分析中心</h1></div></div>
     <section class="form-card"><h2>手动运行分析</h2><p>用于补跑指定周期、核验规则效果或即时生成管理结论；不改变已保存的日报内容。</p>
       <div class="admin-actions"><label>分析周期<select v-model="period"><option value="DAILY">日报</option><option value="WEEKLY">周报</option><option value="MONTHLY">月报</option></select></label><label>分析结束日期<input v-model="endDate" data-testid="analysis-end-date" type="date" /></label><button class="button-primary" data-testid="run-analysis" :disabled="pending" type="button" @click="runNow">{{ pending ? '分析中…' : '运行分析' }}</button></div>
+      <p v-if="pending" class="feedback" role="status">AI 分析中，预计需要 1～3 分钟，请勿重复提交。</p>
       <p v-if="message" class="feedback" role="status">{{ message }}</p>
     </section>
     <section v-if="summaries.length" class="analysis-grid" aria-label="分析结论"><article v-for="summary in summaries" :key="summary.result.runId" class="form-card"><span class="eyebrow">分析结论</span><h2>{{ summary.result.analysisDate }}</h2><p>本次共 {{ conclusionCount(summary) }} 条结论</p><h3>{{ summary.conclusions[0]?.title }}</h3><p>{{ summaryText(summary) }}</p><button class="button-secondary" data-testid="view-analysis-detail" type="button" @click="viewDetail(summary)">查看详情</button></article></section>

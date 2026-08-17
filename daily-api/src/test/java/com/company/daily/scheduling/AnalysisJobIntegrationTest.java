@@ -30,7 +30,11 @@ class AnalysisJobIntegrationTest extends PostgresIntegrationTest {
   @Autowired FakeEmailGateway gateway;
 
   @Test
-  void recordsScheduledFailureAndRetriesWithoutDuplicatingSuccessfulEmail() {
+  void recordsScheduledFailureAndAllowsRepeatedSuccessfulEmail() {
+    jdbcTemplate.update("insert into workday_calendar(calendar_date,workday,source,note,active) "
+        + "values (?,true,'ADMIN_OVERRIDE','integration test',true) "
+        + "on conflict (calendar_date,source) do update set workday=true,active=true",
+        LocalDate.now());
     jdbcTemplate.update("update analysis_configurations set email_enabled=true,"
         + "recipients='manager@example.test',report_enabled=true where id=1");
     gateway.fail.set(true);
@@ -48,11 +52,11 @@ class AnalysisJobIntegrationTest extends PostgresIntegrationTest {
 
     AnalysisRunResponse duplicateRetry = orchestrator.retry(failedEmail.id());
     assertThat(duplicateRetry.status()).isEqualTo("succeeded");
-    assertThat(duplicateRetry.emailStatus()).isEqualTo("skipped-duplicate");
-    assertThat(gateway.attempts).hasValue(2);
+    assertThat(duplicateRetry.emailStatus()).isEqualTo("sent");
+    assertThat(gateway.attempts).hasValue(3);
     Integer sent = jdbcTemplate.queryForObject("select count(*) from email_deliveries "
         + "where analysis_date=? and status='sent'", Integer.class, LocalDate.now());
-    assertThat(sent).isEqualTo(1);
+    assertThat(sent).isEqualTo(2);
   }
 
   @TestConfiguration

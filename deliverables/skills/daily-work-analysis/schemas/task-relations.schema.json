@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://daily-work-analysis.local/schemas/task-relations.schema.json",
+  "type": "array",
+  "items": {"type": "object", "additionalProperties": false, "required": ["relation_id", "task_id", "parent_task_id", "related_task_id", "relation_type", "person_id", "role", "evidence_id"], "properties": {
+    "relation_id": {"type": "string", "minLength": 1}, "task_id": {"type": "string", "minLength": 1}, "parent_task_id": {"type": ["string", "null"]}, "related_task_id": {"type": ["string", "null"]}, "relation_type": {"enum": ["parent_child", "continuation", "lead", "collaborate"]}, "person_id": {"type": "string", "minLength": 1}, "role": {"enum": ["lead", "collaborator"]}, "evidence_id": {"type": "string", "minLength": 1}
+  }}
+}

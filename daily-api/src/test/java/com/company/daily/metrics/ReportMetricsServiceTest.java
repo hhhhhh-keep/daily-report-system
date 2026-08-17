@@ -27,8 +27,8 @@ class ReportMetricsServiceTest extends PostgresIntegrationTest {
       LocalDate day = date.minusDays(offset);
       long report = report(employeeOne, day);
       task(report, projectOne, "morning", "temporary-support", "持续支撑交付",
-          offset == 0 ? "at-risk" : "progressing");
-      task(report, projectOne, "afternoon", "owner", "等待客户反馈", "waiting-feedback");
+          offset == 0 ? "blocked" : "in-progress");
+      task(report, projectOne, "afternoon", "owner", "等待客户反馈", "in-progress");
     }
     long secondReport = report(employeeTwo, date);
     task(secondReport, projectOne, "morning", "collaborator", "协同项目甲", "completed");
@@ -74,8 +74,9 @@ class ReportMetricsServiceTest extends PostgresIntegrationTest {
 
   private void task(
       long reportId, long projectId, String period, String role, String result, String status) {
-    jdbcTemplate.update("insert into daily_tasks(report_id,time_period,project_id,work_type,"
-        + "participation_role,progress_result,current_status) values (?,?,?,'delivery',?,?,?)",
+    jdbcTemplate.update("insert into daily_tasks(report_id,time_period,project_id,work_type,work_stage,"
+        + "participation_role,progress_result,current_status) "
+        + "values (?,?,?,'project-support','delivery-implementation',?,?,?)",
         reportId, period, projectId, role, result, status);
   }
 }

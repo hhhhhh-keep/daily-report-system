@@ -143,21 +143,30 @@ public class AnalysisOrchestrator {
     try {
       runStore.saveSkillVersionSnapshot(runId, skills.rule().id(), skills.template().id());
       SkillAnalysisExecutor.SkillExecution skillExecution = skillAnalysisExecutor.execute(skills.rule(),
-          skills.template(), skills.ruleMarkdown(), skills.templateMarkdown(), sourceSnapshot);
+          skills.template(), skills.ruleMarkdown(), skills.templateMarkdown(), sourceSnapshot,
+          skills.rulePackage(), skills.templatePackage());
       if (!"SUCCEEDED".equals(skillExecution.status())) {
         throw new IllegalStateException(skillExecution.errorSummary());
       }
       int vagueLength = configuration.ruleThresholds().getOrDefault("vagueResultLength", 8);
       ReportMetrics metrics = metricsService.calculate(window.startDate(), window.endDate(), vagueLength);
       List<RuleConclusion> rules = ruleService.evaluate(metrics, configuration.ruleThresholds());
-      String advisory = skillExecution.analysisDraft();
+      String advisory = skillExecution.analysisDraft() == null
+          ? skillExecution.errorSummary() : skillExecution.analysisDraft();
       ReportArtifact fallbackArtifact = reportService.generate(configuration, metrics, rules, advisory);
       ReportArtifact artifact = configuration.reportEnabled()
           ? new ReportArtifact(skillExecution.renderedHtml(), fallbackArtifact.pdf(), fallbackArtifact.fileName()) : null;
       EmailDeliveryResult email = artifact == null
           ? new EmailDeliveryResult("not-requested", null)
           : emailService.deliver(runId, window.endDate(), configuration, artifact);
-      String status = email.errorSummary() == null ? "succeeded" : "partial-failure";
+      List<String> errors = new ArrayList<>();
+      if ("failed".equals(skillExecution.aiStatus()) && skillExecution.errorSummary() != null) {
+        errors.add(skillExecution.errorSummary());
+      }
+      if (email.errorSummary() != null) {
+        errors.add(email.errorSummary());
+      }
+      String status = errors.isEmpty() ? "succeeded" : "partial-failure";
       String summary = dimensionSummary(metrics, rules, advisory);
       if (configuration.dashboardEnabled()) {
         for (String dimension : selectedDimensions) {
@@ -166,8 +175,9 @@ public class AnalysisOrchestrator {
       }
       runStore.complete(runId, status, metrics.submittedReportCount(),
           objectMapper.writeValueAsString(metrics), objectMapper.writeValueAsString(rules), advisory,
-          "succeeded", artifact == null ? null : artifact.html(), artifact == null ? null : artifact.pdf(),
-          artifact == null ? null : artifact.fileName(), email.status(), email.errorSummary());
+          skillExecution.aiStatus(), artifact == null ? null : artifact.html(),
+          artifact == null ? null : artifact.pdf(), artifact == null ? null : artifact.fileName(),
+          email.status(), errors.isEmpty() ? null : String.join("; ", errors));
     } catch (Exception exception) {
       runStore.fail(runId, exception.getClass().getSimpleName() + ": " + exception.getMessage());
     }

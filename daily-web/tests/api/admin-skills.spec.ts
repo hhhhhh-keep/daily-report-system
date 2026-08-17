@@ -11,7 +11,7 @@ describe('adminApi.trialAnalysisSkills', () => {
 
     expect(post).toHaveBeenCalledWith('/admin/analysis-skills/DAILY/trial', undefined, {
       params: { endDate: '2026-07-31', ruleVersionId: 1, templateVersionId: 2 },
-      timeout: 120_000,
+      timeout: 240_000,
     })
   })
 })

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://daily-work-analysis.local/schemas/attendance.schema.json",
+  "type": "array",
+  "items": {"type": "object", "additionalProperties": false, "required": ["person_id", "date", "morning_status", "afternoon_status", "leave_type", "leave_period", "source_record_id"], "properties": {
+    "person_id": {"type": "string", "minLength": 1}, "date": {"type": "string", "format": "date"}, "morning_status": {"enum": ["working", "leave", "absent", "unknown"]}, "afternoon_status": {"enum": ["working", "leave", "absent", "unknown"]}, "leave_type": {"type": ["string", "null"]}, "leave_period": {"enum": ["none", "full_day", "morning", "afternoon", "unknown"]}, "source_record_id": {"type": "string", "minLength": 1}
+  }}
+}

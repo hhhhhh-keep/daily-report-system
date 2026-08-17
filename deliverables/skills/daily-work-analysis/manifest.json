@@ -1,0 +1,24 @@
+{
+  "format_version": "2.0",
+  "name": "daily-work-analysis",
+  "skill_version": "3.1.0",
+  "runtime_profile": "daily-python-3.12-v1",
+  "contracts": {
+    "data_package": "daily-data-package/1.1.0",
+    "facts": "daily-facts/1.2.0",
+    "analysis": "daily-analysis/1.2.0"
+  },
+  "entrypoints": {
+    "prepare_facts": "scripts/run_prepare_facts.py",
+    "validate_analysis": "scripts/run_validate_analysis.py"
+  },
+  "modules": [
+    "scripts/build_fact_package.py",
+    "scripts/calculate_daily_metrics.py",
+    "scripts/package_contract.py",
+    "scripts/validate_analysis_result.py"
+  ],
+  "permissions": {
+    "network": false
+  }
+}

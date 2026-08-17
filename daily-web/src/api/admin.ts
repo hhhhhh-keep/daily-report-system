@@ -109,6 +109,31 @@ export interface ReportSummary {
   attendance: string
   status: string
   taskCount: number
+  submittedAt: string
+  updatedAt: string
+}
+
+export interface PersonReportPeriodStatistics {
+  employeeId: number
+  employeeName: string
+  teamName: string
+  expectedReportCount: number
+  earlySubmittedCount: number
+  earlySubmissionRate: number
+  missingCount: number
+  leaveOccurrences: number
+  leaveEquivalentDays: number
+  trainingCount: number
+}
+
+export interface ReportPeriodStatistics {
+  period: 'WEEKLY' | 'MONTHLY'
+  periodStart: string
+  periodEnd: string
+  workdayCount: number
+  coverageMode: 'FROZEN_SNAPSHOTS' | 'MIXED_SNAPSHOT_FALLBACK' | 'CURRENT_ROSTER_FALLBACK'
+  totals: Omit<PersonReportPeriodStatistics, 'employeeId' | 'employeeName' | 'teamName'>
+  people: PersonReportPeriodStatistics[]
 }
 
 export interface DashboardMetrics {
@@ -173,6 +198,7 @@ export interface AnalysisSkillVersion {
   packageName: string
   checksum: string
   validationMessage: string
+  runtimeProfile: string | null
   trialSucceededAt: string | null
   publishedAt: string | null
   createdAt: string
@@ -294,6 +320,8 @@ export const adminApi = {
     size?: number
   } = {}) =>
     http.get<Page<ReportSummary>>('/admin/reports', { params }),
+  reportPeriodStatistics: (period: 'WEEKLY' | 'MONTHLY', anchor: string) =>
+    http.get<ReportPeriodStatistics>('/admin/reports/period-statistics', { params: { period, anchor } }),
   report: (id: number) => http.get(`/admin/reports/${id}`),
   dashboard: (date?: string) =>
     http.get<DashboardMetrics>('/admin/dashboard', { params: { date } }),
@@ -303,6 +331,8 @@ export const adminApi = {
     http.put<AnalysisConfiguration>('/admin/configuration/analysis', value),
   testAnalysisConnection: (value: Pick<AnalysisConfiguration, 'modelEndpoint' | 'modelName' | 'modelApiKey'>) =>
     http.post<{ connected: boolean; message: string }>('/admin/configuration/analysis/test-connection', value),
+  sendTestEmail: () =>
+    http.post<{ sent: boolean; message: string }>('/admin/configuration/email/test'),
   reportStatisticsConfiguration: () =>
     http.get<ReportStatisticsConfiguration>('/admin/configuration/report-statistics'),
   updateReportStatisticsConfiguration: (value: ReportStatisticsConfiguration) =>
@@ -321,7 +351,7 @@ export const adminApi = {
     http.get(`/admin/analysis-skills/download/${id}`, { responseType: 'blob' }),
   trialAnalysisSkills: (period: AnalysisPeriod, endDate: string, ruleVersionId: number, templateVersionId: number) =>
     http.post<AnalysisSkillTrial>(`/admin/analysis-skills/${period}/trial`, undefined,
-      { params: { endDate, ruleVersionId, templateVersionId }, timeout: 120_000 }),
+      { params: { endDate, ruleVersionId, templateVersionId }, timeout: 240_000 }),
   analysisSkillTrials: (period: AnalysisPeriod) =>
     http.get<AnalysisSkillTrial[]>(`/admin/analysis-skills/${period}/trials`),
   publishAnalysisSkills: (period: AnalysisPeriod, ruleVersionId: number, templateVersionId: number) =>
@@ -337,7 +367,10 @@ export const adminApi = {
   runs: (params: { page?: number; size?: number } = {}) =>
     http.get<Page<AnalysisRun>>('/admin/runs', { params }),
   runNow: (date?: string, period: AnalysisPeriod = 'DAILY') =>
-    http.post<AnalysisRun>('/admin/runs', undefined, { params: { date, period } }),
+    http.post<AnalysisRun>('/admin/runs', undefined, {
+      params: { date, period },
+      timeout: 240_000,
+    }),
   retryRun: (id: number) => http.post<AnalysisRun>(`/admin/runs/${id}/retry`),
   latestAnalysis: () => http.get<DimensionResult[]>('/admin/analysis/latest'),
 }

@@ -8,10 +8,13 @@ vi.mock('@/api/http', () => ({ apiError: (error: { message: string }) => error }
 
 describe('AdminProjectsView', () => {
   it('filters projects and opens activity in a dialog', async () => {
-    api.projects.mockResolvedValue({ data: [
-      { id: 1, name: '公安数据湖项目', code: 'PA-01', customerName: '省公安厅', formal: true, active: true },
-      { id: 2, name: '省医保五期项目', code: 'MI-05', customerName: '省医保局', formal: true, active: true },
-    ] })
+    api.projects.mockResolvedValue({ data: {
+      items: [
+        { id: 1, name: '公安数据湖项目', code: 'PA-01', customerName: '省公安厅', formal: true, active: true },
+        { id: 2, name: '省医保五期项目', code: 'MI-05', customerName: '省医保局', formal: true, active: true },
+      ],
+      totalItems: 2, page: 0, pageSize: 20, totalPages: 1,
+    } })
     const wrapper = shallowMount(AdminProjectsView, { global: { stubs: { AdminLayout: { template: '<main><slot /></main>' } } } })
     await flushPromises()
     await wrapper.find('[data-testid="project-search"]').setValue('医保')
@@ -20,7 +23,10 @@ describe('AdminProjectsView', () => {
   })
 
   it('loads project report activity when opening the timeline', async () => {
-    api.projects.mockResolvedValue({ data: [{ id: 1, name: '项目1', formal: true, active: true }] })
+    api.projects.mockResolvedValue({ data: {
+      items: [{ id: 1, name: '项目1', formal: true, active: true }],
+      totalItems: 1, page: 0, pageSize: 20, totalPages: 1,
+    } })
     api.projectActivity.mockResolvedValue({ data: {
       projectId: 1, participantCount: 1, latestReportDate: '2026-08-12', blockedOrPausedCount: 0,
       derivedState: { state: 'PRESALES_IN_PROGRESS', lifecycle: 'presales',
@@ -42,7 +48,7 @@ describe('AdminProjectsView', () => {
     await wrapper.find('.activity-button').trigger('click')
     await flushPromises()
 
-    expect(api.projectActivity).toHaveBeenCalledWith(1, 30)
+    expect(api.projectActivity).toHaveBeenCalledWith(1, { days: 30, page: 0, size: 20 })
     expect(wrapper.text()).toContain('张三')
     expect(wrapper.text()).toContain('方案编写/设计')
     expect(wrapper.text()).toContain('售前推进')

@@ -43,7 +43,8 @@ public class ReportMetricsService {
     int abnormal = rangeScalar("select count(*)" + taskBase
         + " and t.current_status in ('at-risk','blocked')", startDate, endDate);
     int waiting = rangeScalar("select count(*)" + taskBase
-        + " and t.current_status='waiting-feedback'", startDate, endDate);
+        + " and t.current_status='in-progress'"
+        + " and t.progress_result like '%等待%反馈%'", startDate, endDate);
     int support = rangeScalar("select count(*)" + taskBase
         + " and t.participation_role='temporary-support'", startDate, endDate);
     int vague = jdbcTemplate.queryForObject("select count(*)" + taskBase
@@ -55,7 +56,19 @@ public class ReportMetricsService {
     return new ReportMetrics(endDate, employees, reports, Math.max(0, employees - reports), tasks,
         projects, morning, afternoon, abnormal, waiting, support, vague, multiProject, multiPerson,
         consecutive("temporary-support", endDate, true),
-        consecutive("waiting-feedback", endDate, false));
+        consecutiveWaitingFeedback(endDate));
+  }
+
+  private int consecutiveWaitingFeedback(LocalDate date) {
+    List<GroupedDate> dates = jdbcTemplate.query(
+        "select distinct t.project_id group_id,r.report_date from daily_tasks t "
+            + "join daily_reports r on r.id=t.report_id "
+            + "where t.current_status='in-progress' "
+            + "and t.progress_result like '%等待%反馈%' and r.report_date<=? "
+            + "order by group_id,r.report_date",
+        (rs, row) -> new GroupedDate(rs.getLong("group_id"), rs.getObject("report_date", LocalDate.class)),
+        date);
+    return maximumConsecutiveDays(dates);
   }
 
   private int consecutive(String value, LocalDate date, boolean participation) {
@@ -67,6 +80,10 @@ public class ReportMetricsService {
             + "and r.report_date<=? order by group_id,r.report_date",
         (rs, row) -> new GroupedDate(rs.getLong("group_id"), rs.getObject("report_date", LocalDate.class)),
         value, date);
+    return maximumConsecutiveDays(dates);
+  }
+
+  private int maximumConsecutiveDays(List<GroupedDate> dates) {
     Map<Long, List<LocalDate>> grouped = new HashMap<>();
     dates.forEach(item -> grouped.computeIfAbsent(item.groupId(), ignored -> new ArrayList<>()).add(item.date()));
     int maximum = 0;

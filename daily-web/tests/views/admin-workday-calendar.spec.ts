@@ -2,7 +2,9 @@ import { shallowMount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import AdminWorkdayCalendarView from '@/views/admin/AdminWorkdayCalendarView.vue'
 
-vi.mock('@/api/admin', () => ({ adminApi: { workdayCalendar: vi.fn(() => Promise.resolve({ data: [] })) } }))
+vi.mock('@/api/admin', () => ({ adminApi: { workdayCalendar: vi.fn(() => Promise.resolve({
+  data: { items: [], totalItems: 0, page: 0, pageSize: 366, totalPages: 0 },
+})) } }))
 
 describe('AdminWorkdayCalendarView', () => {
   it('shows an annual calendar grid instead of a record table', () => {

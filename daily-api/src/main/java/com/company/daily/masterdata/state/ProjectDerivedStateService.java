@@ -50,6 +50,16 @@ public class ProjectDerivedStateService {
         where r.report_date=?""", Long.class, date).forEach(this::recalculateProject);
   }
 
+  @Transactional
+  public void removeTaskReferencesForReport(long reportId) {
+    jdbcTemplate.update("update project_state_snapshots set trigger_task_id=null "
+        + "where trigger_task_id in (select id from daily_tasks where report_id=?)", reportId);
+    jdbcTemplate.update("delete from project_state_events "
+        + "where trigger_task_id in (select id from daily_tasks where report_id=?)", reportId);
+    jdbcTemplate.update("delete from project_derived_states "
+        + "where trigger_task_id in (select id from daily_tasks where report_id=?)", reportId);
+  }
+
   @Transactional(readOnly = true)
   public Optional<ProjectDerivedStateResponse> current(long projectId) {
     List<ProjectDerivedStateResponse> states = jdbcTemplate.query("""

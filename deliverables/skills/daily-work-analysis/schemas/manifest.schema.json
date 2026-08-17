@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://daily-work-analysis.local/schemas/manifest.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["data_contract_version", "package_id", "department_id", "department_name", "period_type", "start_date", "end_date", "working_dates", "timezone", "generated_at", "file_sha256"],
+  "properties": {
+    "data_contract_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "package_id": {"type": "string", "minLength": 1},
+    "department_id": {"type": "string", "minLength": 1},
+    "department_name": {"type": "string", "minLength": 1},
+    "period_type": {"enum": ["daily", "weekly", "monthly"]},
+    "report_date": {"type": "string", "format": "date"},
+    "start_date": {"type": "string", "format": "date"},
+    "end_date": {"type": "string", "format": "date"},
+    "working_dates": {"type": "array", "minItems": 1, "items": {"type": "string", "format": "date"}},
+    "timezone": {"const": "Asia/Shanghai"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "stale_project_threshold_workdays": {"type": "integer", "minimum": 1},
+    "file_sha256": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["roster.json", "attendance.json", "reports.json", "tasks.json", "task-relations.json", "projects.json", "source-snapshot.json"],
+      "properties": {
+        "roster.json": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "attendance.json": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "reports.json": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "tasks.json": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "task-relations.json": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "projects.json": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "source-snapshot.json": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        ,"statistics.json": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        ,"project-status.json": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        ,"workdays.json": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    }
+  },
+  "allOf": [{
+    "if": {"properties": {"data_contract_version": {"pattern": "^1\\.[1-9][0-9]*\\."}}},
+    "then": {
+      "required": ["stale_project_threshold_workdays"],
+      "properties": {"file_sha256": {"required": ["statistics.json", "project-status.json", "workdays.json"]}}
+    }
+  }, {
+    "if": {"properties": {"data_contract_version": {"pattern": "^1\\.2\\."}}},
+    "then": {"required": ["report_date"]}
+  }]
+}

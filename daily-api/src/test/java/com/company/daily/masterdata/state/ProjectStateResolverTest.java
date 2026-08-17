@@ -33,4 +33,21 @@ class ProjectStateResolverTest {
 
     assertThat(state).isEqualTo(ProjectDerivedStateValue.IN_PROGRESS);
   }
+
+  @Test
+  void mapsCustomWorkWithoutStageToGenericInProgress() {
+    ProjectDerivedStateValue state = resolver.resolve(
+        new ProjectStateFact(1L, LocalDate.of(2026, 8, 12), "contract-work", null, "completed"));
+
+    assertThat(state).isEqualTo(ProjectDerivedStateValue.IN_PROGRESS);
+  }
+
+  @Test
+  void mapsEncodedDeliveryStageToDeliveryInProgress() {
+    ProjectDerivedStateValue state = resolver.resolve(
+        new ProjectStateFact(1L, LocalDate.of(2026, 8, 12), "project-support",
+            "delivery-implementation", "in-progress"));
+
+    assertThat(state).isEqualTo(ProjectDerivedStateValue.DELIVERY_IN_PROGRESS);
+  }
 }

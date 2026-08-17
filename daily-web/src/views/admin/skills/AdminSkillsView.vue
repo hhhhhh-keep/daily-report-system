@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import AdminLayout from '@/layouts/AdminLayout.vue'
 import { adminApi, type AnalysisPeriod, type AnalysisSkillKind, type AnalysisSkillTrial, type AnalysisSkillVersion } from '@/api/admin'
 import { apiError } from '@/api/http'
@@ -10,15 +10,26 @@ const versions = ref<Record<AnalysisSkillKind, AnalysisSkillVersion[]>>({ RULE: 
 const trials = ref<AnalysisSkillTrial[]>([])
 const selected = ref<Record<AnalysisSkillKind, number | null>>({ RULE: null, TEMPLATE: null })
 const message = ref('')
+const trialRunning = ref(false)
 const resultViewer = ref<{ title: string; content: string; html: boolean } | null>(null)
+let trialPollTimer: ReturnType<typeof setTimeout> | null = null
 
 const names: Record<AnalysisPeriod, string> = { DAILY: '日报', WEEKLY: '周报', MONTHLY: '月报' }
 const kinds: { kind: AnalysisSkillKind; label: string }[] = [
   { kind: 'RULE', label: '规则分析' }, { kind: 'TEMPLATE', label: '报告模板' },
 ]
 const latestTrial = computed(() => trials.value.find(trial => trial.ruleSkillVersionId === selected.value.RULE
-  && trial.templateSkillVersionId === selected.value.TEMPLATE && trial.status === 'SUCCEEDED'))
-const canPublish = computed(() => Boolean(latestTrial.value && selected.value.RULE && selected.value.TEMPLATE))
+  && trial.templateSkillVersionId === selected.value.TEMPLATE))
+const persistedTrialRunning = computed(() => latestTrial.value?.status === 'RUNNING')
+const isTrialRunning = computed(() => trialRunning.value || persistedTrialRunning.value)
+const latestTrialDegraded = computed(() => latestTrial.value?.status === 'SUCCEEDED'
+  && Boolean(latestTrial.value.errorSummary))
+const latestTrialSuccessful = computed(() => latestTrial.value?.status === 'SUCCEEDED'
+  && !latestTrial.value.errorSummary)
+const canPublish = computed(() => Boolean(latestTrialSuccessful.value
+  && selected.value.RULE && selected.value.TEMPLATE))
+const latestTrialHasDocument = computed(() => versions.value.TEMPLATE
+  .some(version => version.id === latestTrial.value?.templateSkillVersionId && Boolean(version.runtimeProfile)))
 
 function versionStatus(status: string) {
   return ({ DRAFT: '草稿', PUBLISHED: '已发布', HISTORICAL: '已归档' } as Record<string, string>)[status] ?? '未知状态'
@@ -42,9 +53,17 @@ async function load() {
   versions.value = { RULE: rule.data, TEMPLATE: template.data }
   trials.value = currentTrials.data
   for (const kind of ['RULE', 'TEMPLATE'] as AnalysisSkillKind[]) {
-    const preferred = versions.value[kind].find(item => item.status === 'DRAFT') ?? versions.value[kind][0]
+    const current = versions.value[kind].find(item => item.id === selected.value[kind])
+    const preferred = current ?? versions.value[kind].find(item => item.status === 'DRAFT') ?? versions.value[kind][0]
     selected.value[kind] = preferred?.id ?? null
   }
+  scheduleTrialPoll()
+}
+function scheduleTrialPoll() {
+  if (trialPollTimer) clearTimeout(trialPollTimer)
+  trialPollTimer = persistedTrialRunning.value
+    ? setTimeout(() => { void load() }, 3_000)
+    : null
 }
 async function changePeriod(value: AnalysisPeriod) { period.value = value; await load() }
 async function upload(kind: AnalysisSkillKind, event: Event) {
@@ -54,9 +73,21 @@ async function upload(kind: AnalysisSkillKind, event: Event) {
   catch (error) { message.value = apiError(error).message }
 }
 async function runTrial() {
-  if (!selected.value.RULE || !selected.value.TEMPLATE) return
-  try { await adminApi.trialAnalysisSkills(period.value, endDate.value, selected.value.RULE, selected.value.TEMPLATE); message.value = '试运行已完成'; await load() }
+  if (!selected.value.RULE || !selected.value.TEMPLATE || isTrialRunning.value) return
+  trialRunning.value = true
+  message.value = '正在试运行，请稍候…'
+  try {
+    const response = await adminApi.trialAnalysisSkills(
+      period.value, endDate.value, selected.value.RULE, selected.value.TEMPLATE,
+    )
+    const trial = response.data
+    message.value = trial.status === 'SUCCEEDED'
+      ? trial.errorSummary ? `试运行降级完成：${trial.errorSummary}` : '试运行成功，可查看结果并下载报告'
+      : `试运行失败：${trial.errorSummary ?? '请检查规则与模板 Skill'}`
+    await load()
+  }
   catch (error) { message.value = apiError(error).message }
+  finally { trialRunning.value = false }
 }
 async function publish() {
   if (!selected.value.RULE || !selected.value.TEMPLATE) return
@@ -64,9 +95,13 @@ async function publish() {
   catch (error) { message.value = apiError(error).message }
 }
 function download(id: number) { window.open(`/api/admin/analysis-skills/download/${id}`, '_blank') }
+function downloadDocument(trialId: number) {
+  window.open(`/api/admin/analysis-skills/trials/${trialId}/document`, '_blank')
+}
 function viewResult(title: string, content: string, html = false) { resultViewer.value = { title, content, html } }
 
 onMounted(load)
+onUnmounted(() => { if (trialPollTimer) clearTimeout(trialPollTimer) })
 </script>
 
 <template>
@@ -89,17 +124,21 @@ onMounted(load)
       <section class="form-card">
         <h2>成对试运行与发布</h2>
         <p>先生成分析结论，再生成管理报告。两者针对同一历史周期试运行成功后，才可成对发布。</p>
-        <label>历史周期结束日期<input v-model="endDate" type="date" /></label><button class="button-secondary" type="button" :disabled="!selected.RULE || !selected.TEMPLATE" @click="runTrial">试运行所选版本</button>
+        <label>历史周期结束日期<input v-model="endDate" type="date" /></label><button data-testid="run-skill-trial" class="button-secondary" type="button" :disabled="!selected.RULE || !selected.TEMPLATE || isTrialRunning" @click="runTrial">{{ isTrialRunning ? '正在试运行…' : '试运行所选版本' }}</button>
         <button class="button-primary" type="button" :disabled="!canPublish" @click="publish">成对发布</button>
         <p v-if="message" class="feedback" role="status">{{ message }}</p>
       </section>
 
-      <section v-if="latestTrial" class="form-card skill-result-card" data-testid="latest-successful-trial">
-        <span class="eyebrow">最近执行结果</span><div class="admin-title"><div><h2>最近成功试运行</h2><p>分析周期：{{ latestTrial.periodStart }} 至 {{ latestTrial.periodEnd }}</p></div><span class="status-badge success">成功</span></div>
+      <section v-if="latestTrial" class="form-card skill-result-card" data-testid="latest-skill-trial">
+        <span v-if="latestTrialSuccessful" data-testid="latest-successful-trial" />
+        <span class="eyebrow">最近执行结果</span><div class="admin-title"><div><h2>{{ latestTrial.status === 'RUNNING' ? '正在试运行' : latestTrialDegraded ? '最近试运行降级完成' : latestTrialSuccessful ? '最近成功试运行' : '最近试运行失败' }}</h2><p>分析周期：{{ latestTrial.periodStart }} 至 {{ latestTrial.periodEnd }}</p></div><span class="status-badge" :class="{ success: latestTrialSuccessful }">{{ latestTrial.status === 'RUNNING' ? '运行中' : latestTrialDegraded ? '降级完成' : latestTrialSuccessful ? '成功' : '失败' }}</span></div>
         <p>执行时间：{{ formatDateTime(latestTrial.startedAt) }}</p>
         <p>使用版本：规则分析 {{ versionLabel('RULE', latestTrial.ruleSkillVersionId) }} · 报告模板 {{ versionLabel('TEMPLATE', latestTrial.templateSkillVersionId) }}</p>
-        <p>规则结论和管理报告已生成，可分别查看。</p>
-        <div class="button-row"><button data-testid="view-analysis-draft" class="button-secondary" type="button" @click="viewResult('分析结论', latestTrial.analysisDraft ?? '')">查看分析结论</button><button data-testid="view-rendered-report" class="button-primary" type="button" @click="viewResult('报告预览', latestTrial.renderedHtml ?? '', true)">查看报告预览</button></div>
+        <p v-if="latestTrial.status === 'RUNNING'">任务已提交到后台，切换菜单或刷新页面不会丢失，完成后本页会自动更新。</p>
+        <p v-else-if="latestTrialDegraded">{{ latestTrial.errorSummary }}。当前仅生成基础报告，不能成对发布。</p>
+        <p v-else-if="latestTrialSuccessful">规则结论和管理报告已生成，可分别查看。</p>
+        <p v-else>{{ latestTrial.errorSummary ?? '试运行未成功，请检查任务日志。' }}</p>
+        <div v-if="latestTrial.status === 'SUCCEEDED'" class="button-row"><button v-if="latestTrial.analysisDraft" data-testid="view-analysis-draft" class="button-secondary" type="button" @click="viewResult('分析结论', latestTrial.analysisDraft)">查看分析结论</button><button data-testid="view-rendered-report" class="button-primary" type="button" @click="viewResult('报告预览', latestTrial.renderedHtml ?? '', true)">查看报告预览</button><button v-if="latestTrialHasDocument" data-testid="download-docx" class="button-secondary" type="button" @click="downloadDocument(latestTrial.id)">下载 Word</button></div>
       </section>
 
       <div v-if="resultViewer" class="modal-backdrop" @click.self="resultViewer = null"><section class="form-card modal-panel skill-result-modal" role="dialog" aria-modal="true" :aria-label="resultViewer.title"><div class="admin-title"><h2>{{ resultViewer.title }}</h2><button class="button-secondary" type="button" @click="resultViewer = null">关闭</button></div><div v-if="resultViewer.html" class="skill-report-preview" v-html="resultViewer.content" /><pre v-else class="skill-draft-preview">{{ resultViewer.content }}</pre></section></div>

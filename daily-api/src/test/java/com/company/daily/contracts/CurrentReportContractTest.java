@@ -27,6 +27,9 @@ class CurrentReportContractTest extends PostgresIntegrationTest {
 
   @BeforeEach
   void insertReferences() {
+    jdbcTemplate.update("delete from project_state_snapshots");
+    jdbcTemplate.update("delete from project_state_events");
+    jdbcTemplate.update("delete from project_derived_states");
     jdbcTemplate.update("delete from daily_tasks");
     jdbcTemplate.update("delete from daily_reports");
     jdbcTemplate.update("delete from projects where formal = true");
@@ -43,7 +46,7 @@ class CurrentReportContractTest extends PostgresIntegrationTest {
 
   @Test
   void createsReadsAndReplacesTheSingleCurrentReport() throws Exception {
-    String today = LocalDate.now().toString();
+    String today = nextWorkday().toString();
 
     mockMvc.perform(put("/api/reports/current")
             .contentType(MediaType.APPLICATION_JSON)
@@ -88,13 +91,14 @@ class CurrentReportContractTest extends PostgresIntegrationTest {
           "tasks": [{
             "timePeriod": "morning",
             "projectId": %d,
-            "workType": "delivery",
+            "workType": "project-support",
+            "workStage": "delivery-implementation",
             "participationRole": "owner",
             "progressResult": "发现交付风险",
-            "currentStatus": "at-risk"
+            "currentStatus": "blocked"
           }]
         }
-        """.formatted(employeeId, LocalDate.now(), projectId);
+        """.formatted(employeeId, nextWorkday(), projectId);
 
     mockMvc.perform(put("/api/reports/current")
             .contentType(MediaType.APPLICATION_JSON)
@@ -105,7 +109,7 @@ class CurrentReportContractTest extends PostgresIntegrationTest {
 
   @Test
   void preservesTheStageForProjectSupportAndClearsItForSpecialWork() throws Exception {
-    String today = LocalDate.now().toString();
+    String today = nextWorkday().toString();
     String projectSupportTask = """
         {
           "employeeId": %d,
@@ -115,7 +119,7 @@ class CurrentReportContractTest extends PostgresIntegrationTest {
             "timePeriod": "morning",
             "projectId": %d,
             "workType": "project-support",
-            "workStage": "requirements-analysis",
+            "workStage": "presales-requirements-analysis",
             "participationRole": "owner",
             "progressResult": "stage contract",
             "currentStatus": "in-progress"
@@ -127,11 +131,12 @@ class CurrentReportContractTest extends PostgresIntegrationTest {
             .contentType(MediaType.APPLICATION_JSON)
             .content(projectSupportTask))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.tasks[0].workStage").value("requirements-analysis"));
+        .andExpect(jsonPath("$.tasks[0].workStage").value("presales-requirements-analysis"));
 
     String specialTask = projectSupportTask
         .replace("project-support", "special-work")
-        .replace("\"workStage\": \"requirements-analysis\",", "\"workStage\": \"requirements-analysis\",");
+        .replace("\"workStage\": \"presales-requirements-analysis\",",
+            "\"workStage\": \"presales-requirements-analysis\",");
     mockMvc.perform(put("/api/reports/current")
             .contentType(MediaType.APPLICATION_JSON)
             .content(specialTask))
@@ -145,10 +150,11 @@ class CurrentReportContractTest extends PostgresIntegrationTest {
           ,{
             "timePeriod": "afternoon",
             "projectId": %d,
-            "workType": "delivery",
+            "workType": "project-support",
+            "workStage": "delivery-implementation",
             "participationRole": "collaborator",
             "progressResult": "完成联调并等待反馈",
-            "currentStatus": "waiting-feedback"
+            "currentStatus": "in-progress"
           }
           """.formatted(projectId)
         : "";
@@ -161,12 +167,21 @@ class CurrentReportContractTest extends PostgresIntegrationTest {
           "tasks": [{
             "timePeriod": "morning",
             "projectId": %d,
-            "workType": "delivery",
+            "workType": "project-support",
+            "workStage": "delivery-implementation",
             "participationRole": "owner",
             "progressResult": "完成日报核心流程",
-            "currentStatus": "progressing"
+            "currentStatus": "in-progress"
           }%s]
         }
         """.formatted(employeeId, date, note, projectId, secondTask);
+  }
+
+  private LocalDate nextWorkday() {
+    LocalDate date = LocalDate.now();
+    while (date.getDayOfWeek().getValue() > 5) {
+      date = date.plusDays(1);
+    }
+    return date;
   }
 }

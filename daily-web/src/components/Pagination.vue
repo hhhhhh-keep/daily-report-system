@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+defineOptions({ name: 'AppPagination' })
+
 /**
  * 通用分页组件：双向绑定 page + pageSize，总数变化时自动回正到第 0 页。
  *

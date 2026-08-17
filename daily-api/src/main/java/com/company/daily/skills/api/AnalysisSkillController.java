@@ -64,6 +64,15 @@ public class AnalysisSkillController {
     return service.trials(period);
   }
 
+  @GetMapping("/trials/{trialId}/document")
+  public ResponseEntity<byte[]> document(@PathVariable long trialId) {
+    AnalysisSkillService.SkillArtifact artifact = service.document(trialId);
+    return ResponseEntity.ok()
+        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + artifact.fileName())
+        .contentType(MediaType.parseMediaType(artifact.mimeType()))
+        .body(artifact.content());
+  }
+
   @PostMapping("/{period}/publish")
   public void publish(
       @PathVariable AnalysisPeriod period,

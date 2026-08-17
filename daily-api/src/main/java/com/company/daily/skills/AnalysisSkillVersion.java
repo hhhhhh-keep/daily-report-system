@@ -14,6 +14,7 @@ public record AnalysisSkillVersion(
     String packageName,
     String checksum,
     String validationMessage,
+    String runtimeProfile,
     Instant trialSucceededAt,
     Instant publishedAt,
     Instant createdAt) {}

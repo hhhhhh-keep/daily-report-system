@@ -1,10 +1,11 @@
 package com.company.daily.email;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.company.daily.config.EnvironmentProperties;
@@ -18,7 +19,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 class EmailServiceTest {
   @Test
-  void skipsGatewayWhenTheDateAlreadyHasASuccessfulDelivery() {
+  void sendsAgainWhenTheDateAlreadyHasASuccessfulDelivery() {
     JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
     EmailGateway gateway = mock(EmailGateway.class);
     LocalDate date = LocalDate.of(2026, 8, 10);
@@ -28,8 +29,8 @@ class EmailServiceTest {
         .deliver(7, date, configuration(), new ReportArtifact("<h1>report</h1>",
             new byte[] {1}, "r.pdf"));
 
-    assertThat(result.status()).isEqualTo("skipped-duplicate");
-    verifyNoInteractions(gateway);
+    assertThat(result.status()).isEqualTo("sent");
+    verify(gateway).send(any(EmailMessage.class), any(SmtpSettings.class));
   }
 
   private AnalysisConfiguration configuration() {

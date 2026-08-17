@@ -30,7 +30,7 @@ class ReportOptionsContractTest extends PostgresIntegrationTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.employees[0].name").value("测试员工"))
         .andExpect(jsonPath("$.projects[0].name").value("测试项目"))
-        .andExpect(jsonPath("$.dictionaries.work_type[0].code").value("delivery"))
+        .andExpect(jsonPath("$.dictionaries.work_type[0].code").value("project-support"))
         .andExpect(jsonPath("$.nonFormalOptions.length()").value(6));
   }
 

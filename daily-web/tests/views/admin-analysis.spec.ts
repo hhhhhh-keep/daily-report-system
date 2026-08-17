@@ -43,4 +43,36 @@ describe('AdminAnalysisView', () => {
     expect(wrapper.text()).toContain('分析依据')
     expect(wrapper.text()).toContain('处理建议')
   })
+
+  it('keeps the action disabled and shows progress while analysis is running', async () => {
+    let finish!: (value: unknown) => void
+    api.runNow.mockImplementation(() => new Promise(resolve => { finish = resolve }))
+    const wrapper = shallowMount(AdminAnalysisView, {
+      global: { stubs: { AdminLayout: { template: '<main><slot /></main>' } } },
+    })
+    await flushPromises()
+
+    await wrapper.find('[data-testid="run-analysis"]').trigger('click')
+
+    expect(wrapper.find('[data-testid="run-analysis"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.text()).toContain('AI 分析中，预计需要 1～3 分钟，请勿重复提交')
+    finish({ data: { status: 'succeeded', llmStatus: 'succeeded', emailStatus: 'sent' } })
+  })
+
+  it('shows run, AI and email status after completion', async () => {
+    api.runNow.mockResolvedValue({
+      data: { status: 'succeeded', llmStatus: 'succeeded', emailStatus: 'sent' },
+    })
+    const wrapper = shallowMount(AdminAnalysisView, {
+      global: { stubs: { AdminLayout: { template: '<main><slot /></main>' } } },
+    })
+    await flushPromises()
+
+    await wrapper.find('[data-testid="run-analysis"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('运行：成功')
+    expect(wrapper.text()).toContain('AI：成功')
+    expect(wrapper.text()).toContain('邮件：已发送')
+  })
 })

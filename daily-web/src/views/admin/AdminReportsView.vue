@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import AdminLayout from '@/layouts/AdminLayout.vue'
-import { adminApi, type DictionaryRecord, type EmployeeRecord, type Page, type ReportSummary } from '@/api/admin'
+import {
+  adminApi,
+  type DictionaryRecord,
+  type EmployeeRecord,
+  type Page,
+  type ReportPeriodStatistics,
+  type ReportSummary,
+} from '@/api/admin'
 import { apiError } from '@/api/http'
 import Pagination from '@/components/Pagination.vue'
 import {
@@ -40,6 +47,8 @@ interface ReportDetail {
   attendance: string
   note: string | null
   status: string
+  submittedAt: string
+  updatedAt: string
   tasks: TaskDetail[]
 }
 
@@ -58,6 +67,9 @@ const employees = ref<EmployeeRecord[]>([])
 const dictionaries = ref<DictionaryRecord[]>([])
 const error = ref('')
 const detailError = ref('')
+const periodMode = ref<'WEEKLY' | 'MONTHLY'>('WEEKLY')
+const periodStatistics = ref<ReportPeriodStatistics | null>(null)
+const periodLoading = ref(false)
 
 let loadToken = 0
 async function load() {
@@ -111,6 +123,38 @@ async function loadFilters() {
   }
 }
 
+function localIsoDate() {
+  const now = new Date()
+  const offset = now.getTimezoneOffset() * 60_000
+  return new Date(now.getTime() - offset).toISOString().slice(0, 10)
+}
+
+async function loadPeriodStatistics() {
+  periodLoading.value = true
+  try {
+    periodStatistics.value = (await adminApi.reportPeriodStatistics(
+      periodMode.value,
+      date.value || localIsoDate(),
+    )).data
+  } catch (caught) {
+    error.value = apiError(caught).message
+  } finally {
+    periodLoading.value = false
+  }
+}
+
+async function switchPeriod(value: 'WEEKLY' | 'MONTHLY') {
+  periodMode.value = value
+  await loadPeriodStatistics()
+}
+
+function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat('zh-CN', {
+    timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  }).format(new Date(value))
+}
+
 function toggleAttendance(code: string) {
   const index = attendances.value.indexOf(code)
   if (index === -1) attendances.value = [...attendances.value, code]
@@ -131,6 +175,7 @@ function debounceLoad() {
 
 watch(keyword, () => { page.value = 0; debounceLoad() })
 watch([date, employeeId, () => attendances.value.join(',')], () => { page.value = 0; load() })
+watch(date, () => { loadPeriodStatistics() })
 
 // 阶段分类（售前/售中/售后）按 workStage code 前缀划分。
 // 与 DailyTaskForm.vue 的 stageGroups 保持一致。
@@ -159,8 +204,7 @@ const hasActiveFilter = computed(() =>
 )
 
 onMounted(async () => {
-  await loadFilters()
-  await load()
+  await Promise.all([loadFilters(), load(), loadPeriodStatistics()])
 })
 </script>
 
@@ -195,17 +239,63 @@ onMounted(async () => {
 
   <p v-if="error" class="feedback error" role="alert">{{ error }}</p>
 
+  <section class="period-statistics form-card" aria-labelledby="period-statistics-title">
+    <header class="period-statistics-head">
+      <div>
+        <span class="eyebrow">PERIOD SUMMARY</span>
+        <h2 id="period-statistics-title">填报累计统计</h2>
+        <small v-if="periodStatistics">
+          {{ periodStatistics.periodStart }} 至 {{ periodStatistics.periodEnd }} ·
+          {{ periodStatistics.workdayCount }} 个工作日
+        </small>
+      </div>
+      <div class="period-tabs" aria-label="统计周期">
+        <button type="button" data-testid="period-weekly"
+          :class="{ active: periodMode === 'WEEKLY' }" @click="switchPeriod('WEEKLY')">周统计</button>
+        <button type="button" data-testid="period-monthly"
+          :class="{ active: periodMode === 'MONTHLY' }" @click="switchPeriod('MONTHLY')">月统计</button>
+      </div>
+    </header>
+    <div v-if="periodStatistics" class="admin-table-wrap">
+      <table>
+        <thead><tr><th>人员</th><th>应填</th><th>17:30前填写</th><th>早填率</th>
+          <th>未填</th><th>请假次数</th><th>请假折算天数</th><th>培训次数</th></tr></thead>
+        <tbody>
+          <tr class="period-total"><td>部门合计</td>
+            <td>{{ periodStatistics.totals.expectedReportCount }}</td>
+            <td>{{ periodStatistics.totals.earlySubmittedCount }}</td>
+            <td>{{ periodStatistics.totals.earlySubmissionRate }}%</td>
+            <td>{{ periodStatistics.totals.missingCount }}</td>
+            <td>{{ periodStatistics.totals.leaveOccurrences }}</td>
+            <td>{{ periodStatistics.totals.leaveEquivalentDays }}</td>
+            <td>{{ periodStatistics.totals.trainingCount }}</td></tr>
+          <tr v-for="person in periodStatistics.people" :key="person.employeeId">
+            <td>{{ person.employeeName }}<small>{{ person.teamName }}</small></td>
+            <td>{{ person.expectedReportCount }}</td><td>{{ person.earlySubmittedCount }}</td>
+            <td>{{ person.earlySubmissionRate }}%</td><td>{{ person.missingCount }}</td>
+            <td>{{ person.leaveOccurrences }}</td><td>{{ person.leaveEquivalentDays }}</td>
+            <td>{{ person.trainingCount }}</td></tr>
+          <tr v-if="!periodStatistics.people.length"><td colspan="8" class="empty-row">当前周期暂无人员数据</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p v-else class="empty-row">{{ periodLoading ? '正在统计…' : '当前周期暂无统计数据' }}</p>
+  </section>
+
   <div class="admin-table-wrap">
     <table>
-      <thead><tr><th>日期</th><th>员工</th><th>出勤</th><th>任务数</th><th>操作</th></tr></thead>
+      <thead><tr><th>日期</th><th>员工</th><th>出勤</th><th>任务数</th>
+        <th>首次提交时间</th><th>最后修改时间</th><th>操作</th></tr></thead>
       <tbody><tr v-for="row in rows" :key="row.id">
         <td>{{ row.date }}</td>
         <td>{{ row.employeeName }}</td>
         <td>{{ attendanceLabel(row.attendance) }}</td>
         <td>{{ row.taskCount }}</td>
+        <td>{{ formatDateTime(row.submittedAt) }}</td>
+        <td>{{ formatDateTime(row.updatedAt) }}</td>
         <td><button type="button" @click="open(row.id)">查看任务</button></td>
       </tr>
-      <tr v-if="!rows.length"><td colspan="5" class="empty-row">当前筛选下没有日报</td></tr>
+      <tr v-if="!rows.length"><td colspan="7" class="empty-row">当前筛选下没有日报</td></tr>
       </tbody>
     </table>
   </div>
@@ -220,7 +310,8 @@ onMounted(async () => {
     <header class="report-detail-head">
       <div>
         <h2>{{ detail.employeeName }} · {{ detail.date }}</h2>
-        <small>出勤 {{ attendanceLabel(detail.attendance) }} · 任务 {{ detail.tasks.length }} 条</small>
+        <small>出勤 {{ attendanceLabel(detail.attendance) }} · 任务 {{ detail.tasks.length }} 条 ·
+          首次提交 {{ formatDateTime(detail.submittedAt) }} · 最后修改 {{ formatDateTime(detail.updatedAt) }}</small>
       </div>
       <button type="button" class="button-link" @click="detail = null">关闭详情</button>
     </header>
@@ -250,6 +341,15 @@ onMounted(async () => {
 <style scoped>
 .admin-title-actions { display: flex; gap: 12px; align-items: end; }
 .reports-filter { margin-bottom: 0; }
+.period-statistics { margin: 18px 0; }
+.period-statistics-head { display: flex; justify-content: space-between; align-items: end; gap: 16px; }
+.period-statistics-head h2 { margin: 3px 0; }
+.period-statistics-head small { color: #667085; }
+.period-tabs { display: flex; gap: 8px; }
+.period-tabs button { border: 1px solid #d0d5dd; background: #fff; color: #344054; border-radius: 8px; padding: 8px 16px; font-weight: 700; }
+.period-tabs button.active { background: #155eef; color: #fff; border-color: #155eef; }
+.period-total { background: #eff4ff; font-weight: 700; }
+.period-statistics td small { display: block; color: #667085; margin-top: 2px; }
 .filter-chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; min-height: 42px; }
 .filter-chips-label { color: #667085; font-size: 0.82rem; font-weight: 600; }
 .chip { padding: 6px 14px; border-radius: 999px; border: 1px solid #d0d5dd; background: #fff; color: #344054; font-weight: 600; font-size: 0.85rem; }

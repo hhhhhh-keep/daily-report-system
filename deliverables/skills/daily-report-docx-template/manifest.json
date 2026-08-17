@@ -1,0 +1,23 @@
+{
+  "format_version": "2.0",
+  "name": "daily-report-docx-template",
+  "skill_version": "3.1.7",
+  "runtime_profile": "daily-python-3.12-v1",
+  "contracts": {
+    "facts": "daily-facts/1.2.0",
+    "analysis": "daily-analysis/1.2.0"
+  },
+  "entrypoints": {
+    "render_docx": "scripts/run_render_docx.py"
+  },
+  "modules": [
+    "scripts/audit_daily_report.py",
+    "scripts/render_daily_report.py"
+  ],
+  "outputs": {
+    "document": "report.docx"
+  },
+  "permissions": {
+    "network": false
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://daily-work-analysis.local/schemas/workdays.schema.json",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["date", "workday", "source", "note"],
+    "properties": {
+      "date": {"type": "string", "format": "date"},
+      "workday": {"type": "boolean"},
+      "source": {"type": ["string", "null"]},
+      "note": {"type": ["string", "null"]}
+    }
+  }
+}

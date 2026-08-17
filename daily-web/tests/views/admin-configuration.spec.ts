@@ -2,7 +2,12 @@ import { flushPromises, shallowMount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AdminTechnicalConnectionView from '@/views/admin/config/AdminTechnicalConnectionView.vue'
 
-const api = vi.hoisted(() => ({ analysisConfiguration: vi.fn(), updateAnalysisConfiguration: vi.fn(), testAnalysisConnection: vi.fn() }))
+const api = vi.hoisted(() => ({
+  analysisConfiguration: vi.fn(),
+  updateAnalysisConfiguration: vi.fn(),
+  testAnalysisConnection: vi.fn(),
+  sendTestEmail: vi.fn(),
+}))
 
 vi.mock('@/api/admin', () => ({ adminApi: api }))
 vi.mock('@/api/http', () => ({ apiError: (error: { message: string }) => error }))
@@ -42,5 +47,19 @@ describe('AdminTechnicalConnectionView', () => {
     await flushPromises()
     expect(api.testAnalysisConnection).toHaveBeenCalledWith(expect.objectContaining({ modelName: null }))
     expect(wrapper.text()).toContain('连接成功')
+  })
+
+  it('sends a standalone test email from the saved configuration', async () => {
+    api.sendTestEmail.mockResolvedValue({ data: { sent: true, message: '测试邮件已发送' } })
+    const wrapper = shallowMount(AdminTechnicalConnectionView, {
+      global: { stubs: { AdminLayout: { template: '<main><slot /></main>' } } },
+    })
+    await flushPromises()
+
+    await wrapper.find('[data-testid="send-test-email"]').trigger('click')
+    await flushPromises()
+
+    expect(api.sendTestEmail).toHaveBeenCalledOnce()
+    expect(wrapper.text()).toContain('测试邮件已发送')
   })
 })

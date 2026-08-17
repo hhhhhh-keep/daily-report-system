@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://daily-work-analysis.local/schemas/source-snapshot.schema.json",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["snapshot_id", "source_system", "source_record_id", "raw_record", "evidence_quality"],
+    "properties": {
+      "snapshot_id": {"type": "string", "minLength": 1},
+      "source_system": {"type": "string", "minLength": 1},
+      "source_record_id": {"type": "string", "minLength": 1},
+      "raw_record": {"type": "string"},
+      "evidence_quality": {"enum": ["source-record-id", "derived-row-key"]}
+    }
+  }
+}

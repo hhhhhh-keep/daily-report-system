@@ -7,9 +7,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.company.daily.support.PostgresIntegrationTest;
 import com.company.daily.configuration.AnalysisConfigurationRequest;
+import com.company.daily.support.PostgresIntegrationTest;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,8 +22,6 @@ import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.ObjectMapper;
-import java.util.List;
-import java.util.Map;
 
 @SpringBootTest(properties = "spring.quartz.auto-startup=false")
 @AutoConfigureMockMvc
@@ -31,7 +31,7 @@ class AnalysisRunContractTest extends PostgresIntegrationTest {
   @Autowired ObjectMapper objectMapper;
 
   @Test
-  void createsVisibleDimensionResultsAndDownloadableReportsThroughProtectedApi() throws Exception {
+  void validatesConfigurationAndRequiresPublishedSkillsForManualAnalysis() throws Exception {
     LocalDate date = LocalDate.of(2026, 8, 10);
     seedReport(date);
     MockHttpSession session = login();
@@ -50,23 +50,10 @@ class AnalysisRunContractTest extends PostgresIntegrationTest {
     mockMvc.perform(get("/api/admin/configuration/analysis").session(session))
         .andExpect(jsonPath("$.cronExpression").value("0 0 22 * * ?"));
 
-    MvcResult created = mockMvc.perform(post("/api/admin/runs")
+    mockMvc.perform(post("/api/admin/runs")
             .session(session).param("date", date.toString()))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.status").value("succeeded"))
-        .andExpect(jsonPath("$.llmStatus").value("skipped"))
-        .andExpect(jsonPath("$.reportAvailable").value(true))
-        .andExpect(jsonPath("$.analyzedEmployeeCount").value(1))
-        .andReturn();
-    long runId = Long.parseLong(created.getResponse().getContentAsString()
-        .replaceAll(".*\\\"id\\\":(\\d+).*", "$1"));
-
-    mockMvc.perform(get("/api/admin/analysis/latest").session(session))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$[?(@.dimension == 'project-risk')]").exists());
-    mockMvc.perform(get("/api/admin/runs/{id}/report.pdf", runId).session(session))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_PDF));
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
   }
 
   private MockHttpSession login() throws Exception {
@@ -87,8 +74,8 @@ class AnalysisRunContractTest extends PostgresIntegrationTest {
         + "returning id", Long.class, date, employee);
     jdbcTemplate.update("insert into daily_tasks(report_id,time_period,project_id,work_type,"
         + "participation_role,progress_result,current_status,issue_type,collaboration_role,"
-        + "collaboration_requirement) values (?, 'full-day', ?, 'delivery', 'owner',"
-        + "'完成分析流程并识别风险', 'at-risk', 'quality', 'manager', '请管理者评估')",
+        + "collaboration_requirement) values (?, 'full-day', ?, 'project-support', 'owner',"
+        + "'完成分析流程并识别风险', 'blocked', 'quality', 'manager', '请管理者评估')",
         report, project);
   }
 }

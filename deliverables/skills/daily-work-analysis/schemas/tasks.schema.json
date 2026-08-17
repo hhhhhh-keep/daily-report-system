@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://daily-work-analysis.local/schemas/tasks.schema.json",
+  "type": "array",
+  "items": {"type": "object", "additionalProperties": false, "required": ["task_id", "report_id", "date", "time_period", "raw_text", "task_type", "project_candidate_id", "status", "output", "risk", "blocker", "next_step"], "properties": {
+    "task_id": {"type": "string", "minLength": 1}, "report_id": {"type": "string", "minLength": 1}, "date": {"type": "string", "format": "date"}, "time_period": {"enum": ["morning", "afternoon"]}, "raw_text": {"type": "string", "minLength": 1}, "task_type": {"enum": ["project", "internal", "meeting", "training", "administrative", "other"]}, "project_candidate_id": {"type": ["string", "null"]}, "status": {"enum": ["planned", "in_progress", "blocked", "completed"]}, "output": {"type": ["string", "null"]}, "risk": {"type": ["string", "null"]}, "blocker": {"type": ["string", "null"]}, "next_step": {"type": ["string", "null"]}
+  }}
+}

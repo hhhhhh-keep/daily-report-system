@@ -88,6 +88,7 @@ public class CurrentReportService {
     Set<Long> affectedProjectIds = new LinkedHashSet<>();
     taskRepository.findAllByReportIdOrderById(savedReport.getId()).forEach(
         task -> affectedProjectIds.add(task.getProject().getId()));
+    derivedStateService.removeTaskReferencesForReport(savedReport.getId());
     taskRepository.deleteByReportId(savedReport.getId());
     List<DailyTask> replacements = tasks.stream()
         .map(task -> task.toEntity(savedReport))

@@ -1,0 +1,83 @@
+{
+  "normal_day": {
+    "required_project_ids": [
+      "project-normal"
+    ],
+    "risk_evidence_ids": [],
+    "actionable_evidence_ids": [
+      "ev-normal"
+    ]
+  },
+  "full_day_leave": {
+    "required_project_ids": [],
+    "risk_evidence_ids": [],
+    "actionable_evidence_ids": [
+      "ev-full"
+    ]
+  },
+  "half_day_leave": {
+    "required_project_ids": [
+      "project-half"
+    ],
+    "risk_evidence_ids": [],
+    "actionable_evidence_ids": [
+      "ev-half"
+    ]
+  },
+  "unknown_leave_period": {
+    "required_project_ids": [],
+    "risk_evidence_ids": [],
+    "actionable_evidence_ids": [
+      "ev-unknown"
+    ]
+  },
+  "attendance_conflict": {
+    "required_project_ids": [
+      "project-conflict"
+    ],
+    "risk_evidence_ids": [
+      "ev-conflict"
+    ],
+    "actionable_evidence_ids": [
+      "ev-conflict"
+    ]
+  },
+  "multi_person_collaboration": {
+    "required_project_ids": [
+      "project-collab"
+    ],
+    "risk_evidence_ids": [],
+    "actionable_evidence_ids": [
+      "ev-collab"
+    ]
+  },
+  "same_named_projects": {
+    "required_project_ids": [
+      "project-same-a",
+      "project-same-b"
+    ],
+    "risk_evidence_ids": [],
+    "actionable_evidence_ids": [
+      "ev-same-a"
+    ]
+  },
+  "zero_risk": {
+    "required_project_ids": [
+      "project-zero"
+    ],
+    "risk_evidence_ids": [],
+    "actionable_evidence_ids": [
+      "ev-zero"
+    ]
+  },
+  "long_text": {
+    "required_project_ids": [
+      "project-long"
+    ],
+    "risk_evidence_ids": [],
+    "actionable_evidence_ids": [
+      "ev-long"
+    ],
+    "minimum_raw_text_length": 5000
+  }
+}

@@ -12,11 +12,108 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;
 
 class LlmAnalysisAdapterTest {
+  @Test
+  void disablesThinkingAndBoundsSkillResponseForMiniMaxM3() throws Exception {
+    AtomicReference<String> requestBody = new AtomicReference<>();
+    HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+    server.createContext("/chat", exchange -> {
+      requestBody.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
+      byte[] response = """
+          {"choices":[{"message":{"content":"{\\\"summary\\\":\\\"ok\\\"}"}}]}
+          """.getBytes(StandardCharsets.UTF_8);
+      exchange.getResponseHeaders().add("Content-Type", "application/json");
+      exchange.sendResponseHeaders(200, response.length);
+      exchange.getResponseBody().write(response);
+      exchange.close();
+    });
+    server.start();
+    try {
+      AnalysisConfiguration configuration = configuration(
+          "http://localhost:" + server.getAddress().getPort() + "/chat", "MiniMax-M3");
+
+      LlmAnalysisResult result = new LlmAnalysisAdapter(
+          new EnvironmentProperties(), new ObjectMapper()).analyzeSkill(
+              configuration, "Return JSON only", Map.of("facts", true));
+
+      assertThat(result.status()).isEqualTo("succeeded");
+      assertThat(requestBody.get()).contains("\"thinking\":{\"type\":\"disabled\"}")
+          .contains("\"max_completion_tokens\":8192")
+          .doesNotContain("reasoning_split")
+          .doesNotContain("\"max_tokens\"");
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  @Test
+  void retriesOneEmptyMiniMaxM3SkillResponse() throws Exception {
+    AtomicInteger requests = new AtomicInteger();
+    HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+    server.createContext("/chat", exchange -> {
+      int attempt = requests.incrementAndGet();
+      exchange.getRequestBody().readAllBytes();
+      String body = attempt == 1
+          ? "{\"choices\":[{\"finish_reason\":\"length\",\"message\":{\"content\":\"\"}}]}"
+          : "{\"choices\":[{\"finish_reason\":\"stop\",\"message\":{\"content\":\"{\\\"summary\\\":\\\"ok\\\"}\"}}]}";
+      byte[] response = body.getBytes(StandardCharsets.UTF_8);
+      exchange.getResponseHeaders().add("Content-Type", "application/json");
+      exchange.sendResponseHeaders(200, response.length);
+      exchange.getResponseBody().write(response);
+      exchange.close();
+    });
+    server.start();
+    try {
+      AnalysisConfiguration configuration = configuration(
+          "http://localhost:" + server.getAddress().getPort() + "/chat", "MiniMax-M3");
+
+      LlmAnalysisResult result = new LlmAnalysisAdapter(
+          new EnvironmentProperties(), new ObjectMapper()).analyzeSkill(
+              configuration, "Return JSON only", Map.of("facts", true));
+
+      assertThat(result.status()).isEqualTo("succeeded");
+      assertThat(requests).hasValue(2);
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  @Test
+  void failsAfterTwoEmptyMiniMaxM3SkillResponses() throws Exception {
+    AtomicInteger requests = new AtomicInteger();
+    HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+    server.createContext("/chat", exchange -> {
+      requests.incrementAndGet();
+      exchange.getRequestBody().readAllBytes();
+      byte[] response = "{\"choices\":[{\"finish_reason\":\"length\",\"message\":{\"content\":\"\"}}]}"
+          .getBytes(StandardCharsets.UTF_8);
+      exchange.getResponseHeaders().add("Content-Type", "application/json");
+      exchange.sendResponseHeaders(200, response.length);
+      exchange.getResponseBody().write(response);
+      exchange.close();
+    });
+    server.start();
+    try {
+      AnalysisConfiguration configuration = configuration(
+          "http://localhost:" + server.getAddress().getPort() + "/chat", "MiniMax-M3");
+
+      LlmAnalysisResult result = new LlmAnalysisAdapter(
+          new EnvironmentProperties(), new ObjectMapper()).analyzeSkill(
+              configuration, "Return JSON only", Map.of("facts", true));
+
+      assertThat(result.status()).isEqualTo("failed");
+      assertThat(result.errorSummary()).contains("未返回分析内容");
+      assertThat(requests).hasValue(2);
+    } finally {
+      server.stop(0);
+    }
+  }
+
   @Test
   void isolatesOpenAiCompatibleCallAndLabelsOutputAsAdvisory() throws Exception {
     AtomicReference<String> requestBody = new AtomicReference<>();

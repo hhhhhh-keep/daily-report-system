@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://daily-work-analysis.local/schemas/reports.schema.json",
+  "type": "array",
+  "items": {"type": "object", "additionalProperties": false, "required": ["report_id", "person_id", "date", "submission_status", "first_submitted_at", "final_submitted_at", "raw_text", "snapshot_id"], "properties": {
+    "report_id": {"type": "string", "minLength": 1}, "person_id": {"type": "string", "minLength": 1}, "date": {"type": "string", "format": "date"}, "submission_status": {"enum": ["submitted", "draft", "missing"]}, "first_submitted_at": {"type": ["string", "null"], "format": "date-time"}, "final_submitted_at": {"type": ["string", "null"], "format": "date-time"}, "raw_text": {"type": "string"}, "snapshot_id": {"type": "string", "minLength": 1}
+  }}
+}

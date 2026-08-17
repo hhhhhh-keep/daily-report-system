@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://daily-report-docx-template.local/schemas/daily-analysis.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["data_contract_version", "overall_judgment", "efficiency_insights", "continuity_analysis", "association_analysis", "risk_items", "next_day_actions"],
+  "properties": {
+    "data_contract_version": {"const": "1.2.0"},
+    "overall_judgment": {"$ref": "#/$defs/item"},
+    "efficiency_insights": {"type": "array", "items": {"$ref": "#/$defs/item"}},
+    "continuity_analysis": {"type": "array", "items": {"$ref": "#/$defs/item"}},
+    "association_analysis": {"type": "array", "items": {"$ref": "#/$defs/item"}},
+    "risk_items": {"type": "array", "items": {"$ref": "#/$defs/item"}},
+    "next_day_actions": {"type": "array", "items": {"$ref": "#/$defs/item"}}
+  },
+  "$defs": {
+    "item": {
+      "type": "object", "additionalProperties": false,
+      "required": ["summary", "person_ids", "project_id", "evidence_ids", "limitation_note"],
+      "properties": {
+        "summary": {"type": "string", "minLength": 1},
+        "person_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "project_id": {"type": ["string", "null"], "minLength": 1},
+        "evidence_ids": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "limitation_note": {"type": ["string", "null"]}
+      }
+    }
+  }
+}

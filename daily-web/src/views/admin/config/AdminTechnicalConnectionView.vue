@@ -12,6 +12,8 @@ const showSmtpPassword = ref(false)
 const message = ref('')
 const errorMessage = ref('')
 const connectionMessage = ref('')
+const smtpTestPending = ref(false)
+const smtpTestMessage = ref('')
 const smtpHasConfig = computed(() => Boolean(config.value && (config.value.smtpHost || config.value.smtpPort || config.value.smtpUsername || config.value.smtpPassword || config.value.smtpFrom)))
 
 async function load() {
@@ -35,6 +37,14 @@ async function testModelConnection() {
   connectionMessage.value = ''; errorMessage.value = ''
   try { connectionMessage.value = (await adminApi.testAnalysisConnection(config.value)).data.message }
   catch (caught) { errorMessage.value = apiError(caught).message }
+}
+async function sendTestEmail() {
+  smtpTestPending.value = true
+  smtpTestMessage.value = ''
+  errorMessage.value = ''
+  try { smtpTestMessage.value = (await adminApi.sendTestEmail()).data.message }
+  catch (caught) { errorMessage.value = apiError(caught).message }
+  finally { smtpTestPending.value = false }
 }
 function clearSmtp() {
   if (!config.value) return
@@ -67,6 +77,7 @@ onMounted(load)
         <label>密码 / 授权码<div class="secret-input"><input v-model="config.smtpPassword" :type="showSmtpPassword ? 'text' : 'password'" autocomplete="off" placeholder="留空时使用 SMTP_PASSWORD" /><button type="button" class="button-link" @click="showSmtpPassword = !showSmtpPassword">{{ showSmtpPassword ? '隐藏' : '显示' }}</button></div></label>
         <label class="field-wide">发件人地址<input v-model.trim="config.smtpFrom" placeholder="例如 noreply@example.com" /></label>
         <div class="field-wide form-actions-inline"><button v-if="smtpHasConfig" type="button" class="button-link danger" @click="clearSmtp">清空发件箱配置（改用环境变量）</button><p class="hint">留空字段将沿用服务器环境变量；保存后立即生效，无需重启服务。</p></div>
+        <div class="field-wide form-actions-inline"><button data-testid="send-test-email" type="button" class="button-secondary" :disabled="smtpTestPending" @click="sendTestEmail">{{ smtpTestPending ? '发送中…' : '发送测试邮件' }}</button><span v-if="smtpTestMessage" class="feedback" role="status">{{ smtpTestMessage }}</span><p class="hint">使用已保存配置发送，不调用 AI、Skill 或正式报告流程。</p></div>
       </div></section>
       <div class="save-bar"><button class="button-primary" type="submit">保存技术连接</button><p v-if="message" class="save-feedback success" role="status">✓ {{ message }}</p></div>
     </form>

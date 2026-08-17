@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://daily-work-analysis.local/schemas/roster.schema.json",
+  "type": "array",
+  "items": {"type": "object", "additionalProperties": false, "required": ["person_id", "name", "group", "personnel_type", "effective_start_date", "effective_end_date", "include_in_statistics"], "properties": {
+    "person_id": {"type": "string", "minLength": 1}, "name": {"type": "string", "minLength": 1}, "group": {"type": "string"}, "personnel_type": {"type": "string", "minLength": 1}, "effective_start_date": {"type": "string", "format": "date"}, "effective_end_date": {"type": ["string", "null"], "format": "date"}, "include_in_statistics": {"type": "boolean"}
+  }}
+}

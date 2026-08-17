@@ -1,5 +1,7 @@
 package com.company.daily.common.api;
 
+import com.company.daily.admin.service.InvalidCredentialsException;
+import com.company.daily.email.EmailDeliveryException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
@@ -11,7 +13,6 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import com.company.daily.admin.service.InvalidCredentialsException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -47,6 +48,17 @@ public class ApiExceptionHandler {
   @ExceptionHandler(IllegalArgumentException.class)
   ResponseEntity<ApiError> illegalArgument(IllegalArgumentException exception, HttpServletRequest request) {
     return response(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", exception.getMessage(), Map.of(), request);
+  }
+
+  @ExceptionHandler(EmailDeliveryException.class)
+  ResponseEntity<ApiError> emailDelivery(
+      EmailDeliveryException exception, HttpServletRequest request) {
+    return response(
+        HttpStatus.BAD_GATEWAY,
+        "EMAIL_DELIVERY_FAILED",
+        "SMTP 服务器未接受测试邮件，请检查端口、授权码及发件箱反垃圾策略",
+        Map.of(),
+        request);
   }
 
   @ExceptionHandler(ResourceNotFoundException.class)

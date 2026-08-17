@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://daily-work-analysis.local/schemas/project-status.schema.json",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["project_id", "project_name", "snapshot_date", "snapshot_captured_at", "snapshot_origin", "state", "lifecycle", "current_stage", "state_started_date", "owner_name", "participant_count", "blocked_task_count", "latest_report_date", "formal", "active", "source_status", "priority"],
+    "properties": {
+      "project_id": {"type": "string", "minLength": 1},
+      "project_name": {"type": "string", "minLength": 1},
+      "snapshot_date": {"type": "string", "format": "date"},
+      "snapshot_captured_at": {"type": ["string", "null"], "format": "date-time"},
+      "snapshot_origin": {"enum": ["captured", "reconstructed"]},
+      "state": {"type": ["string", "null"]},
+      "lifecycle": {"type": ["string", "null"]},
+      "current_stage": {"type": ["string", "null"]},
+      "state_started_date": {"type": ["string", "null"], "format": "date"},
+      "owner_name": {"type": ["string", "null"]},
+      "participant_count": {"type": "integer", "minimum": 0},
+      "blocked_task_count": {"type": "integer", "minimum": 0},
+      "latest_report_date": {"type": ["string", "null"], "format": "date"},
+      "formal": {"type": "boolean"},
+      "active": {"type": "boolean"},
+      "source_status": {"type": ["string", "null"]},
+      "priority": {"type": ["string", "null"]}
+    }
+  }
+}

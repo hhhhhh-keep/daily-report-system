@@ -3,7 +3,9 @@ package com.company.daily.report.api;
 import com.company.daily.common.api.PageResponse;
 import com.company.daily.report.api.dto.AdminReportSummaryResponse;
 import com.company.daily.report.api.dto.CurrentReportResponse;
+import com.company.daily.report.api.dto.ReportPeriodStatisticsResponse;
 import com.company.daily.report.service.AdminReportQueryService;
+import com.company.daily.report.service.ReportPeriodStatisticsService;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -17,9 +19,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/admin/reports")
 public class AdminReportController {
   private final AdminReportQueryService service;
+  private final ReportPeriodStatisticsService periodStatisticsService;
 
-  public AdminReportController(AdminReportQueryService service) {
+  public AdminReportController(
+      AdminReportQueryService service, ReportPeriodStatisticsService periodStatisticsService) {
     this.service = service;
+    this.periodStatisticsService = periodStatisticsService;
   }
 
   @GetMapping
@@ -31,6 +36,13 @@ public class AdminReportController {
       @RequestParam(required = false, defaultValue = "0") int page,
       @RequestParam(required = false, defaultValue = "20") int size) {
     return service.list(date, employeeId, parseAttendances(attendance), keyword, page, size);
+  }
+
+  @GetMapping("/period-statistics")
+  public ReportPeriodStatisticsResponse periodStatistics(
+      @RequestParam String period,
+      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate anchor) {
+    return periodStatisticsService.statistics(period, anchor);
   }
 
   private static List<String> parseAttendances(String raw) {

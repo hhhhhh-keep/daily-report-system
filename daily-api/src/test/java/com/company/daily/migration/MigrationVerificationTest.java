@@ -20,7 +20,10 @@ class MigrationVerificationTest extends PostgresIntegrationTest {
   void appliesMigrationsInOrderAndEnforcesCoreUniquenessAndIdempotency() {
     List<String> versions = jdbcTemplate.queryForList(
         "select version from flyway_schema_history where success order by installed_rank", String.class);
-    assertThat(versions).containsExactly("001", "002", "003", "004");
+    assertThat(versions).containsExactly(
+        "001", "002", "003", "004", "005", "006", "007", "008", "009", "010",
+        "011", "012", "013", "014", "015", "016", "017", "018", "019", "020",
+        "021", "022", "023");
 
     long employee = jdbcTemplate.queryForObject("insert into employees(name,team_name,position_type) "
         + "values ('迁移员工','迁移组','顾问') returning id", Long.class);
@@ -39,9 +42,11 @@ class MigrationVerificationTest extends PostgresIntegrationTest {
     long secondRun = run(date);
     jdbcTemplate.update("insert into email_deliveries(run_id,analysis_date,status) values (?,?,'sent')",
         firstRun, date);
-    assertThatThrownBy(() -> jdbcTemplate.update(
-        "insert into email_deliveries(run_id,analysis_date,status) values (?,?,'sent')", secondRun, date))
-        .isInstanceOf(DataIntegrityViolationException.class);
+    jdbcTemplate.update(
+        "insert into email_deliveries(run_id,analysis_date,status) values (?,?,'sent')", secondRun, date);
+    assertThat(jdbcTemplate.queryForObject(
+        "select count(*) from email_deliveries where analysis_date=? and status='sent'",
+        Integer.class, date)).isEqualTo(2);
   }
 
   private long run(LocalDate date) {

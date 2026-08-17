@@ -26,6 +26,17 @@ class CurrentReportServiceTest extends PostgresIntegrationTest {
 
   @BeforeEach
   void insertReferences() {
+    jdbcTemplate.update("delete from project_state_snapshots");
+    jdbcTemplate.update("delete from project_state_events");
+    jdbcTemplate.update("delete from project_derived_states");
+    jdbcTemplate.update("delete from daily_tasks");
+    jdbcTemplate.update("delete from daily_reports");
+    jdbcTemplate.update("delete from projects where code='SERVICE-TEST'");
+    jdbcTemplate.update("delete from employees");
+    jdbcTemplate.update("insert into workday_calendar(calendar_date,workday,source,note,active) "
+        + "values (?,true,'ADMIN_OVERRIDE','integration test',true) "
+        + "on conflict (calendar_date,source) do update set workday=true,active=true",
+        LocalDate.now());
     employeeId = jdbcTemplate.queryForObject(
         "insert into employees(name, team_name, position_type, active) "
             + "values ('服务测试员工', '测试组', '顾问', true) returning id",
@@ -55,7 +66,7 @@ class CurrentReportServiceTest extends PostgresIntegrationTest {
         "afternoon", projectId, "special-work", null, "owner", "风险任务", "blocked", null, null, null);
     assertThatThrownBy(() -> service.save(new CurrentReportRequest(
         employeeId,
-        LocalDate.now(),
+        nextWorkday(),
         "present",
         "不应保存",
         List.of(validTask("替换任务"), invalidRisk))))
@@ -82,12 +93,20 @@ class CurrentReportServiceTest extends PostgresIntegrationTest {
         "morning",
         projectId,
         "project-support",
-        "implementation",
+        "delivery-implementation",
         "owner",
         result,
         "in-progress",
         null,
         null,
         null);
+  }
+
+  private LocalDate nextWorkday() {
+    LocalDate date = LocalDate.now();
+    while (date.getDayOfWeek().getValue() > 5) {
+      date = date.plusDays(1);
+    }
+    return date;
   }
 }

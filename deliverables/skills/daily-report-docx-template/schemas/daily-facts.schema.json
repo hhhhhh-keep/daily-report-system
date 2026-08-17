@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://daily-report-docx-template.local/schemas/daily-facts.schema.json",
+  "type": "object",
+  "required": ["data_contract_version", "period", "metrics", "attendance_summary", "efficiency_summary", "formal_project_dynamics", "unlinked_project_dynamics", "stale_project_alerts", "project_continuity", "project_associations", "risk_assessment", "data_quality"],
+  "properties": {
+    "data_contract_version": {"const": "1.2.0"},
+    "period": {"type": "object", "required": ["report_date", "start_date", "end_date", "timezone"]},
+    "metrics": {"type": "object"},
+    "attendance_summary": {"type": "object"},
+    "efficiency_summary": {"type": "array"},
+    "formal_project_dynamics": {"type": "array"},
+    "unlinked_project_dynamics": {"type": "array"},
+    "stale_project_alerts": {"type": "array"},
+    "project_continuity": {"type": "array"},
+    "project_associations": {"type": "array"},
+    "risk_assessment": {"type": "array"},
+    "data_quality": {"type": "object"}
+  }
+}

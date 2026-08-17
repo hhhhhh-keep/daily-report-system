@@ -1,0 +1,932 @@
+[
+  {
+    "id": "normal_day",
+    "facts": {
+      "data_contract_version": "1.0.0",
+      "period": {
+        "start_date": "2026-07-31",
+        "end_date": "2026-07-31",
+        "timezone": "Asia/Shanghai"
+      },
+      "metrics": {
+        "roster_people": 1,
+        "expected_people": 1,
+        "submitted_people": 1,
+        "submission_rate": 1,
+        "missing_people": 0,
+        "full_day_leave_people": 0,
+        "half_day_leave_people": 0,
+        "review_required_people": 0,
+        "effective_task_count": 1,
+        "risk_or_blocked_count": 0
+      },
+      "missing_people": [],
+      "full_day_leave_people": [],
+      "half_day_leave_people": [],
+      "review_required_people": [],
+      "work_composition": [
+        {
+          "task_id": "task-normal",
+          "report_id": "report-task-normal",
+          "person_id": "person-normal",
+          "time_period": "morning",
+          "task_type": "project",
+          "project_candidate_id": "project-normal",
+          "status": "in_progress",
+          "output": null,
+          "next_step": null
+        }
+      ],
+      "status_distribution": {
+        "blocked": 0,
+        "completed": 0,
+        "in_progress": 1,
+        "planned": 0
+      },
+      "project_candidates": [
+        {
+          "project_id": "project-normal",
+          "standard_name": "常规项目",
+          "candidate_names": [
+            "常规项目"
+          ],
+          "merge_status": "unmerged",
+          "manual_confirmation_status": "pending"
+        }
+      ],
+      "collaborations": [],
+      "risk_candidates": [],
+      "evidence": [
+        {
+          "evidence_id": "ev-normal",
+          "raw_text": "完成项目推进"
+        }
+      ]
+    },
+    "candidate": {
+      "data_contract_version": "1.0.0",
+      "work_summary": {
+        "summary": "已完成当日工作。",
+        "evidence_ids": [
+          "ev-normal"
+        ]
+      },
+      "project_highlights": [
+        {
+          "project_id": "project-normal",
+          "summary": "项目正常推进。",
+          "person_ids": [
+            "person-normal"
+          ],
+          "evidence_ids": [
+            "ev-normal"
+          ]
+        }
+      ],
+      "risk_items": [],
+      "next_day_actions": [
+        {
+          "action": "继续跟进项目。",
+          "person_ids": [
+            "person-normal"
+          ],
+          "project_id": "project-normal",
+          "evidence_ids": [
+            "ev-normal"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "full_day_leave",
+    "facts": {
+      "data_contract_version": "1.0.0",
+      "period": {
+        "start_date": "2026-07-31",
+        "end_date": "2026-07-31",
+        "timezone": "Asia/Shanghai"
+      },
+      "metrics": {
+        "roster_people": 1,
+        "expected_people": 0,
+        "submitted_people": 0,
+        "submission_rate": null,
+        "missing_people": 0,
+        "full_day_leave_people": 1,
+        "half_day_leave_people": 0,
+        "review_required_people": 0,
+        "effective_task_count": 0,
+        "risk_or_blocked_count": 0
+      },
+      "missing_people": [],
+      "full_day_leave_people": [
+        {
+          "person_id": "person-full",
+          "name": "全天请假人员",
+          "work_period_status": "not_applicable",
+          "review_reason": null,
+          "source_record_id": "source-person-full"
+        }
+      ],
+      "half_day_leave_people": [],
+      "review_required_people": [],
+      "work_composition": [],
+      "status_distribution": {
+        "blocked": 0,
+        "completed": 0,
+        "in_progress": 0,
+        "planned": 0
+      },
+      "project_candidates": [],
+      "collaborations": [],
+      "risk_candidates": [],
+      "evidence": [
+        {
+          "evidence_id": "ev-full",
+          "raw_text": "全天请假"
+        }
+      ]
+    },
+    "candidate": {
+      "data_contract_version": "1.0.0",
+      "work_summary": {
+        "summary": "出勤状态已记录。",
+        "evidence_ids": [
+          "ev-full"
+        ]
+      },
+      "project_highlights": [],
+      "risk_items": [],
+      "next_day_actions": [
+        {
+          "action": "确认交接安排。",
+          "person_ids": [
+            "person-full"
+          ],
+          "evidence_ids": [
+            "ev-full"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "half_day_leave",
+    "facts": {
+      "data_contract_version": "1.0.0",
+      "period": {
+        "start_date": "2026-07-31",
+        "end_date": "2026-07-31",
+        "timezone": "Asia/Shanghai"
+      },
+      "metrics": {
+        "roster_people": 1,
+        "expected_people": 1,
+        "submitted_people": 1,
+        "submission_rate": 1,
+        "missing_people": 0,
+        "full_day_leave_people": 0,
+        "half_day_leave_people": 1,
+        "review_required_people": 0,
+        "effective_task_count": 1,
+        "risk_or_blocked_count": 0
+      },
+      "missing_people": [],
+      "full_day_leave_people": [],
+      "half_day_leave_people": [
+        {
+          "person_id": "person-half",
+          "name": "半天请假人员",
+          "work_period_status": null,
+          "review_reason": null,
+          "source_record_id": "source-person-half"
+        }
+      ],
+      "review_required_people": [],
+      "work_composition": [
+        {
+          "task_id": "task-half",
+          "report_id": "report-task-half",
+          "person_id": "person-half",
+          "time_period": "morning",
+          "task_type": "project",
+          "project_candidate_id": "project-half",
+          "status": "in_progress",
+          "output": null,
+          "next_step": null
+        }
+      ],
+      "status_distribution": {
+        "blocked": 0,
+        "completed": 0,
+        "in_progress": 1,
+        "planned": 0
+      },
+      "project_candidates": [
+        {
+          "project_id": "project-half",
+          "standard_name": "半天项目",
+          "candidate_names": [
+            "半天项目"
+          ],
+          "merge_status": "unmerged",
+          "manual_confirmation_status": "pending"
+        }
+      ],
+      "collaborations": [],
+      "risk_candidates": [],
+      "evidence": [
+        {
+          "evidence_id": "ev-half",
+          "raw_text": "上午请假，下午完成项目工作"
+        }
+      ]
+    },
+    "candidate": {
+      "data_contract_version": "1.0.0",
+      "work_summary": {
+        "summary": "半天工作已完成。",
+        "evidence_ids": [
+          "ev-half"
+        ]
+      },
+      "project_highlights": [
+        {
+          "project_id": "project-half",
+          "summary": "下午任务完成。",
+          "person_ids": [
+            "person-half"
+          ],
+          "evidence_ids": [
+            "ev-half"
+          ]
+        }
+      ],
+      "risk_items": [],
+      "next_day_actions": [
+        {
+          "action": "跟进后续事项。",
+          "person_ids": [
+            "person-half"
+          ],
+          "project_id": "project-half",
+          "evidence_ids": [
+            "ev-half"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "unknown_leave_period",
+    "facts": {
+      "data_contract_version": "1.0.0",
+      "period": {
+        "start_date": "2026-07-31",
+        "end_date": "2026-07-31",
+        "timezone": "Asia/Shanghai"
+      },
+      "metrics": {
+        "roster_people": 1,
+        "expected_people": 1,
+        "submitted_people": 0,
+        "submission_rate": 0,
+        "missing_people": 0,
+        "full_day_leave_people": 0,
+        "half_day_leave_people": 0,
+        "review_required_people": 1,
+        "effective_task_count": 0,
+        "risk_or_blocked_count": 0
+      },
+      "missing_people": [],
+      "full_day_leave_people": [],
+      "half_day_leave_people": [],
+      "review_required_people": [
+        {
+          "person_id": "person-unknown",
+          "name": "待核验人员",
+          "work_period_status": null,
+          "review_reason": "source_status_requires_review",
+          "source_record_id": "source-person-unknown"
+        }
+      ],
+      "work_composition": [],
+      "status_distribution": {
+        "blocked": 0,
+        "completed": 0,
+        "in_progress": 0,
+        "planned": 0
+      },
+      "project_candidates": [],
+      "collaborations": [],
+      "risk_candidates": [],
+      "evidence": [
+        {
+          "evidence_id": "ev-unknown",
+          "raw_text": "休假，时段未注明"
+        }
+      ]
+    },
+    "candidate": {
+      "data_contract_version": "1.0.0",
+      "work_summary": {
+        "summary": "请假时段待核验。",
+        "evidence_ids": [
+          "ev-unknown"
+        ]
+      },
+      "project_highlights": [],
+      "risk_items": [],
+      "next_day_actions": [
+        {
+          "action": "核验请假时段。",
+          "person_ids": [
+            "person-unknown"
+          ],
+          "evidence_ids": [
+            "ev-unknown"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "attendance_conflict",
+    "facts": {
+      "data_contract_version": "1.0.0",
+      "period": {
+        "start_date": "2026-07-31",
+        "end_date": "2026-07-31",
+        "timezone": "Asia/Shanghai"
+      },
+      "metrics": {
+        "roster_people": 1,
+        "expected_people": 1,
+        "submitted_people": 1,
+        "submission_rate": 1,
+        "missing_people": 0,
+        "full_day_leave_people": 0,
+        "half_day_leave_people": 0,
+        "review_required_people": 1,
+        "effective_task_count": 1,
+        "risk_or_blocked_count": 1
+      },
+      "missing_people": [],
+      "full_day_leave_people": [],
+      "half_day_leave_people": [],
+      "review_required_people": [
+        {
+          "person_id": "person-conflict",
+          "name": "冲突人员",
+          "work_period_status": null,
+          "review_reason": "source_status_requires_review",
+          "source_record_id": "source-person-conflict"
+        }
+      ],
+      "work_composition": [
+        {
+          "task_id": "task-conflict",
+          "report_id": "report-task-conflict",
+          "person_id": "person-conflict",
+          "time_period": "morning",
+          "task_type": "project",
+          "project_candidate_id": "project-conflict",
+          "status": "in_progress",
+          "output": null,
+          "next_step": null
+        }
+      ],
+      "status_distribution": {
+        "blocked": 0,
+        "completed": 0,
+        "in_progress": 1,
+        "planned": 0
+      },
+      "project_candidates": [
+        {
+          "project_id": "project-conflict",
+          "standard_name": "冲突项目",
+          "candidate_names": [
+            "冲突项目"
+          ],
+          "merge_status": "unmerged",
+          "manual_confirmation_status": "pending"
+        }
+      ],
+      "collaborations": [],
+      "risk_candidates": [
+        {
+          "task_id": "task-conflict",
+          "person_id": "person-conflict",
+          "status": "blocked",
+          "risk": "出勤冲突",
+          "blocker": null
+        }
+      ],
+      "evidence": [
+        {
+          "evidence_id": "ev-conflict",
+          "raw_text": "出勤与工作记录冲突"
+        }
+      ]
+    },
+    "candidate": {
+      "data_contract_version": "1.0.0",
+      "work_summary": {
+        "summary": "记录存在待核验冲突。",
+        "evidence_ids": [
+          "ev-conflict"
+        ]
+      },
+      "project_highlights": [
+        {
+          "project_id": "project-conflict",
+          "summary": "项目记录待核验。",
+          "person_ids": [
+            "person-conflict"
+          ],
+          "evidence_ids": [
+            "ev-conflict"
+          ]
+        }
+      ],
+      "risk_items": [
+        {
+          "description": "核验出勤与工作记录。",
+          "person_ids": [
+            "person-conflict"
+          ],
+          "project_id": "project-conflict",
+          "evidence_ids": [
+            "ev-conflict"
+          ]
+        }
+      ],
+      "next_day_actions": [
+        {
+          "action": "完成冲突核验。",
+          "person_ids": [
+            "person-conflict"
+          ],
+          "project_id": "project-conflict",
+          "evidence_ids": [
+            "ev-conflict"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "multi_person_collaboration",
+    "facts": {
+      "data_contract_version": "1.0.0",
+      "period": {
+        "start_date": "2026-07-31",
+        "end_date": "2026-07-31",
+        "timezone": "Asia/Shanghai"
+      },
+      "metrics": {
+        "roster_people": 2,
+        "expected_people": 2,
+        "submitted_people": 1,
+        "submission_rate": 0.5,
+        "missing_people": 0,
+        "full_day_leave_people": 0,
+        "half_day_leave_people": 0,
+        "review_required_people": 0,
+        "effective_task_count": 1,
+        "risk_or_blocked_count": 0
+      },
+      "missing_people": [],
+      "full_day_leave_people": [],
+      "half_day_leave_people": [],
+      "review_required_people": [],
+      "work_composition": [
+        {
+          "task_id": "task-collab",
+          "report_id": "report-task-collab",
+          "person_id": "person-a",
+          "time_period": "morning",
+          "task_type": "project",
+          "project_candidate_id": "project-collab",
+          "status": "in_progress",
+          "output": null,
+          "next_step": null
+        }
+      ],
+      "status_distribution": {
+        "blocked": 0,
+        "completed": 0,
+        "in_progress": 1,
+        "planned": 0
+      },
+      "project_candidates": [
+        {
+          "project_id": "project-collab",
+          "standard_name": "协同项目",
+          "candidate_names": [
+            "协同项目"
+          ],
+          "merge_status": "unmerged",
+          "manual_confirmation_status": "pending"
+        }
+      ],
+      "collaborations": [
+        {
+          "task_id": "task-collab",
+          "person_id": "person-a",
+          "role": "lead",
+          "relation_type": "lead",
+          "evidence_id": "ev-collab",
+          "parent_task_id": null,
+          "related_task_id": null
+        },
+        {
+          "task_id": "task-collab",
+          "person_id": "person-b",
+          "role": "collaborator",
+          "relation_type": "collaborate",
+          "evidence_id": "ev-collab",
+          "parent_task_id": null,
+          "related_task_id": null
+        }
+      ],
+      "risk_candidates": [],
+      "evidence": [
+        {
+          "evidence_id": "ev-collab",
+          "raw_text": "两人协同完成联调"
+        }
+      ]
+    },
+    "candidate": {
+      "data_contract_version": "1.0.0",
+      "work_summary": {
+        "summary": "协同工作已推进。",
+        "evidence_ids": [
+          "ev-collab"
+        ]
+      },
+      "project_highlights": [
+        {
+          "project_id": "project-collab",
+          "summary": "两人完成协同。",
+          "person_ids": [
+            "person-a",
+            "person-b"
+          ],
+          "evidence_ids": [
+            "ev-collab"
+          ]
+        }
+      ],
+      "risk_items": [],
+      "next_day_actions": [
+        {
+          "action": "继续协调联调。",
+          "person_ids": [
+            "person-a",
+            "person-b"
+          ],
+          "project_id": "project-collab",
+          "evidence_ids": [
+            "ev-collab"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "same_named_projects",
+    "facts": {
+      "data_contract_version": "1.0.0",
+      "period": {
+        "start_date": "2026-07-31",
+        "end_date": "2026-07-31",
+        "timezone": "Asia/Shanghai"
+      },
+      "metrics": {
+        "roster_people": 1,
+        "expected_people": 1,
+        "submitted_people": 2,
+      "submission_rate": 1.0,
+        "missing_people": 0,
+        "full_day_leave_people": 0,
+        "half_day_leave_people": 0,
+        "review_required_people": 0,
+        "effective_task_count": 2,
+        "risk_or_blocked_count": 0
+      },
+      "missing_people": [],
+      "full_day_leave_people": [],
+      "half_day_leave_people": [],
+      "review_required_people": [],
+      "work_composition": [
+        {
+          "task_id": "task-same-a",
+          "report_id": "report-task-same-a",
+          "person_id": "person-same",
+          "time_period": "morning",
+          "task_type": "project",
+          "project_candidate_id": "project-same-a",
+          "status": "in_progress",
+          "output": null,
+          "next_step": null
+        },
+        {
+          "task_id": "task-same-b",
+          "report_id": "report-task-same-b",
+          "person_id": "person-same",
+          "time_period": "morning",
+          "task_type": "project",
+          "project_candidate_id": "project-same-b",
+          "status": "in_progress",
+          "output": null,
+          "next_step": null
+        }
+      ],
+      "status_distribution": {
+        "blocked": 0,
+        "completed": 0,
+        "in_progress": 2,
+        "planned": 0
+      },
+      "project_candidates": [
+        {
+          "project_id": "project-same-a",
+          "standard_name": "同名项目",
+          "candidate_names": [
+            "同名项目"
+          ],
+          "merge_status": "unmerged",
+          "manual_confirmation_status": "pending"
+        },
+        {
+          "project_id": "project-same-b",
+          "standard_name": "同名项目",
+          "candidate_names": [
+            "同名项目"
+          ],
+          "merge_status": "unmerged",
+          "manual_confirmation_status": "pending"
+        }
+      ],
+      "collaborations": [],
+      "risk_candidates": [],
+      "evidence": [
+        {
+          "evidence_id": "ev-same-a",
+          "raw_text": "项目甲推进"
+        },
+        {
+          "evidence_id": "ev-same-b",
+          "raw_text": "项目乙推进"
+        }
+      ]
+    },
+    "candidate": {
+      "data_contract_version": "1.0.0",
+      "work_summary": {
+        "summary": "两个项目均有进展。",
+        "evidence_ids": [
+          "ev-same-a",
+          "ev-same-b"
+        ]
+      },
+      "project_highlights": [
+        {
+          "project_id": "project-same-a",
+          "summary": "项目甲推进。",
+          "person_ids": [
+            "person-same"
+          ],
+          "evidence_ids": [
+            "ev-same-a"
+          ]
+        },
+        {
+          "project_id": "project-same-b",
+          "summary": "项目乙推进。",
+          "person_ids": [
+            "person-same"
+          ],
+          "evidence_ids": [
+            "ev-same-b"
+          ]
+        }
+      ],
+      "risk_items": [],
+      "next_day_actions": [
+        {
+          "action": "分别跟进两个项目。",
+          "person_ids": [
+            "person-same"
+          ],
+          "project_id": "project-same-a",
+          "evidence_ids": [
+            "ev-same-a"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "zero_risk",
+    "facts": {
+      "data_contract_version": "1.0.0",
+      "period": {
+        "start_date": "2026-07-31",
+        "end_date": "2026-07-31",
+        "timezone": "Asia/Shanghai"
+      },
+      "metrics": {
+        "roster_people": 1,
+        "expected_people": 1,
+        "submitted_people": 1,
+        "submission_rate": 1,
+        "missing_people": 0,
+        "full_day_leave_people": 0,
+        "half_day_leave_people": 0,
+        "review_required_people": 0,
+        "effective_task_count": 1,
+        "risk_or_blocked_count": 0
+      },
+      "missing_people": [],
+      "full_day_leave_people": [],
+      "half_day_leave_people": [],
+      "review_required_people": [],
+      "work_composition": [
+        {
+          "task_id": "task-zero",
+          "report_id": "report-task-zero",
+          "person_id": "person-zero",
+          "time_period": "morning",
+          "task_type": "project",
+          "project_candidate_id": "project-zero",
+          "status": "in_progress",
+          "output": null,
+          "next_step": null
+        }
+      ],
+      "status_distribution": {
+        "blocked": 0,
+        "completed": 0,
+        "in_progress": 1,
+        "planned": 0
+      },
+      "project_candidates": [
+        {
+          "project_id": "project-zero",
+          "standard_name": "零风险项目",
+          "candidate_names": [
+            "零风险项目"
+          ],
+          "merge_status": "unmerged",
+          "manual_confirmation_status": "pending"
+        }
+      ],
+      "collaborations": [],
+      "risk_candidates": [],
+      "evidence": [
+        {
+          "evidence_id": "ev-zero",
+          "raw_text": "常规工作完成，无风险记录"
+        }
+      ]
+    },
+    "candidate": {
+      "data_contract_version": "1.0.0",
+      "work_summary": {
+        "summary": "无风险事项。",
+        "evidence_ids": [
+          "ev-zero"
+        ]
+      },
+      "project_highlights": [
+        {
+          "project_id": "project-zero",
+          "summary": "常规工作完成。",
+          "person_ids": [
+            "person-zero"
+          ],
+          "evidence_ids": [
+            "ev-zero"
+          ]
+        }
+      ],
+      "risk_items": [],
+      "next_day_actions": [
+        {
+          "action": "保持跟进。",
+          "person_ids": [
+            "person-zero"
+          ],
+          "project_id": "project-zero",
+          "evidence_ids": [
+            "ev-zero"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "long_text",
+    "facts": {
+      "data_contract_version": "1.0.0",
+      "period": {
+        "start_date": "2026-07-31",
+        "end_date": "2026-07-31",
+        "timezone": "Asia/Shanghai"
+      },
+      "metrics": {
+        "roster_people": 1,
+        "expected_people": 1,
+        "submitted_people": 1,
+        "submission_rate": 1,
+        "missing_people": 0,
+        "full_day_leave_people": 0,
+        "half_day_leave_people": 0,
+        "review_required_people": 0,
+        "effective_task_count": 1,
+        "risk_or_blocked_count": 0
+      },
+      "missing_people": [],
+      "full_day_leave_people": [],
+      "half_day_leave_people": [],
+      "review_required_people": [],
+      "work_composition": [
+        {
+          "task_id": "task-long",
+          "report_id": "report-task-long",
+          "person_id": "person-long",
+          "time_period": "morning",
+          "task_type": "project",
+          "project_candidate_id": "project-long",
+          "status": "in_progress",
+          "output": null,
+          "next_step": null
+        }
+      ],
+      "status_distribution": {
+        "blocked": 0,
+        "completed": 0,
+        "in_progress": 1,
+        "planned": 0
+      },
+      "project_candidates": [
+        {
+          "project_id": "project-long",
+          "standard_name": "长文本项目",
+          "candidate_names": [
+            "长文本项目"
+          ],
+          "merge_status": "unmerged",
+          "manual_confirmation_status": "pending"
+        }
+      ],
+      "collaborations": [],
+      "risk_candidates": [],
+      "evidence": [
+        {
+          "evidence_id": "ev-long",
+          "raw_text": "当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。当日围绕需求澄清、方案核验、跨团队联调、风险闭环与交付准备持续推进；已逐项记录责任边界、输入输出、待确认事项和次日跟踪节点，确保原始证据可复核、过程可追溯、结论不超出来源范围。"
+        }
+      ]
+    },
+    "candidate": {
+      "data_contract_version": "1.0.0",
+      "work_summary": {
+        "summary": "超长原始记录已纳入评测。",
+        "evidence_ids": [
+          "ev-long"
+        ]
+      },
+      "project_highlights": [
+        {
+          "project_id": "project-long",
+          "summary": "长文本项目推进。",
+          "person_ids": [
+            "person-long"
+          ],
+          "evidence_ids": [
+            "ev-long"
+          ]
+        }
+      ],
+      "risk_items": [],
+      "next_day_actions": [
+        {
+          "action": "继续梳理长文本工作。",
+          "person_ids": [
+            "person-long"
+          ],
+          "project_id": "project-long",
+          "evidence_ids": [
+            "ev-long"
+          ]
+        }
+      ]
+    }
+  }
+]

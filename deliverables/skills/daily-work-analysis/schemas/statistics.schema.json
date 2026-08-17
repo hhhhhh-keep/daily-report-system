@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://daily-work-analysis.local/schemas/statistics.schema.json",
+  "$defs": {
+    "person": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["employeeId", "name", "teamName", "submittedAt"],
+      "properties": {
+        "employeeId": {"type": ["integer", "null"]},
+        "name": {"type": "string", "minLength": 1},
+        "teamName": {"type": ["string", "null"]},
+        "submittedAt": {"type": ["string", "null"], "format": "date-time"}
+      }
+    }
+  },
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["snapshot_type", "snapshot_date", "captured_at", "expected_count", "submitted_count", "missing_count", "submission_rate", "submitted_people", "missing_people", "late_submitted_people", "team_statistics"],
+    "properties": {
+      "snapshot_type": {"type": "string", "minLength": 1},
+      "snapshot_date": {"type": "string", "format": "date"},
+      "captured_at": {"type": ["string", "null"], "format": "date-time"},
+      "expected_count": {"type": "integer", "minimum": 0},
+      "submitted_count": {"type": "integer", "minimum": 0},
+      "missing_count": {"type": "integer", "minimum": 0},
+      "submission_rate": {"type": "number", "minimum": 0, "maximum": 1},
+      "submitted_people": {"type": "array", "items": {"$ref": "#/$defs/person"}},
+      "missing_people": {"type": "array", "items": {"$ref": "#/$defs/person"}},
+      "late_submitted_people": {"type": "array", "items": {"$ref": "#/$defs/person"}},
+      "team_statistics": {"type": "array", "items": {"type": "object"}}
+    }
+  }
+}
