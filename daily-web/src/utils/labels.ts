@@ -127,7 +127,7 @@ export function participationRoleLabel(code: string | null | undefined): string 
  * `label` 是给用户看的中文。
  */
 export const ATTENDANCE_FILTER_OPTIONS: Array<{ code: string; label: string }> = [
-  { code: 'present', label: ATTENDANCE_LABELS.present ?? '正常出勤' },
+  { code: 'present', label: '正常出勤' },
   { code: 'leave', label: ATTENDANCE_LABELS.leave ?? '请假' },
   { code: 'remote', label: ATTENDANCE_LABELS.remote ?? '远程办公' },
   { code: 'business_trip', label: ATTENDANCE_LABELS.business_trip ?? '出差' },

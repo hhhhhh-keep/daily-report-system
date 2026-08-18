@@ -1,16 +1,18 @@
 package com.company.daily.scheduling;
 
-import com.company.daily.analysis.LlmAnalysisAdapter;
-import com.company.daily.analysis.LlmAnalysisResult;
+import com.company.daily.analysis.AnalysisPeriod;
 import com.company.daily.analysis.AnalysisPeriodConfiguration;
 import com.company.daily.analysis.AnalysisPeriodConfigurationService;
 import com.company.daily.analysis.AnalysisPeriodWindow;
 import com.company.daily.analysis.AnalysisRuleVersionService;
 import com.company.daily.analysis.AnalysisSourceSnapshotService;
+import com.company.daily.analysis.LlmAnalysisAdapter;
+import com.company.daily.analysis.LlmAnalysisResult;
 import com.company.daily.configuration.AnalysisConfiguration;
 import com.company.daily.configuration.AnalysisConfigurationService;
 import com.company.daily.email.EmailDeliveryResult;
 import com.company.daily.email.EmailService;
+import com.company.daily.email.PeriodEmailDeliverySettings;
 import com.company.daily.metrics.ReportMetrics;
 import com.company.daily.metrics.ReportMetricsService;
 import com.company.daily.reporting.ReportArtifact;
@@ -87,6 +89,12 @@ public class AnalysisOrchestrator {
     if (!List.of("failed", "partial-failure").contains(source.status())) {
       throw new IllegalArgumentException("仅失败或部分失败的运行可以重试");
     }
+    if (source.analysisPeriod() != null) {
+      AnalysisPeriod period = AnalysisPeriod.valueOf(source.analysisPeriod());
+      AnalysisPeriodWindow window = new AnalysisPeriodWindow(
+          period, source.periodStart(), source.periodEnd());
+      return execute(window, "retry", source.selectedDimensions());
+    }
     return execute(source.analysisDate(), "retry", source.id(), source.retryCount() + 1);
   }
 
@@ -124,8 +132,9 @@ public class AnalysisOrchestrator {
       }
       runStore.complete(runId, status, metrics.submittedReportCount(),
           objectMapper.writeValueAsString(metrics), objectMapper.writeValueAsString(rules),
-          advisory, llm.status(), artifact == null ? null : artifact.html(),
-          artifact == null ? null : artifact.pdf(), artifact == null ? null : artifact.fileName(),
+          advisory, llm.status(), llm.errorSummary(), artifact == null ? null : artifact.html(),
+          artifact == null ? null : artifact.content(), artifact == null ? null : artifact.fileName(),
+          artifact == null ? null : artifact.mimeType(),
           email.status(), errors.isEmpty() ? null : String.join("; ", errors));
     } catch (Exception exception) {
       runStore.fail(runId, exception.getClass().getSimpleName() + ": " + exception.getMessage());
@@ -137,6 +146,9 @@ public class AnalysisOrchestrator {
       AnalysisPeriodWindow window, String triggerType, List<String> selectedDimensions) {
     AnalysisSkillService.PublishedSkillPair skills = analysisSkillService.publishedPair(window.period());
     AnalysisConfiguration configuration = configurationService.get();
+    AnalysisPeriodConfiguration periodConfiguration = periodConfigurationService.get(window.period());
+    PeriodEmailDeliverySettings delivery = PeriodEmailDeliverySettings.from(
+        periodConfiguration, window.endDate());
     String sourceSnapshot = sourceSnapshotService.build(window);
     long runId = runStore.start(window, triggerType, selectedDimensions,
         sourceSnapshot, null, 0);
@@ -153,12 +165,15 @@ public class AnalysisOrchestrator {
       List<RuleConclusion> rules = ruleService.evaluate(metrics, configuration.ruleThresholds());
       String advisory = skillExecution.analysisDraft() == null
           ? skillExecution.errorSummary() : skillExecution.analysisDraft();
-      ReportArtifact fallbackArtifact = reportService.generate(configuration, metrics, rules, advisory);
-      ReportArtifact artifact = configuration.reportEnabled()
-          ? new ReportArtifact(skillExecution.renderedHtml(), fallbackArtifact.pdf(), fallbackArtifact.fileName()) : null;
-      EmailDeliveryResult email = artifact == null
-          ? new EmailDeliveryResult("not-requested", null)
-          : emailService.deliver(runId, window.endDate(), configuration, artifact);
+      if (skillExecution.renderedDocument() == null || skillExecution.renderedDocument().length == 0) {
+        throw new IllegalStateException("Skill 未生成 Word 报告");
+      }
+      ReportArtifact artifact = new ReportArtifact(
+          withReportTitle(skillExecution.renderedHtml(), delivery.reportTitle()),
+          skillExecution.renderedDocument(), reportFileName(delivery.reportTitle()),
+          ReportArtifact.DOCX_MIME_TYPE);
+      EmailDeliveryResult email = emailService.deliver(
+          runId, window.endDate(), configuration, delivery, artifact);
       List<String> errors = new ArrayList<>();
       if ("failed".equals(skillExecution.aiStatus()) && skillExecution.errorSummary() != null) {
         errors.add(skillExecution.errorSummary());
@@ -175,8 +190,8 @@ public class AnalysisOrchestrator {
       }
       runStore.complete(runId, status, metrics.submittedReportCount(),
           objectMapper.writeValueAsString(metrics), objectMapper.writeValueAsString(rules), advisory,
-          skillExecution.aiStatus(), artifact == null ? null : artifact.html(),
-          artifact == null ? null : artifact.pdf(), artifact == null ? null : artifact.fileName(),
+          skillExecution.aiStatus(), skillExecution.errorSummary(), artifact == null ? null : artifact.html(),
+          artifact.content(), artifact.fileName(), artifact.mimeType(),
           email.status(), errors.isEmpty() ? null : String.join("; ", errors));
     } catch (Exception exception) {
       runStore.fail(runId, exception.getClass().getSimpleName() + ": " + exception.getMessage());
@@ -190,5 +205,20 @@ public class AnalysisOrchestrator {
         + " 人；任务 " + metrics.taskCount() + " 项；项目 " + metrics.projectCount()
         + " 个；异常 " + metrics.abnormalTaskCount() + " 项；规则 " + rules.size()
         + " 条。\n" + advisory;
+  }
+
+  private static String withReportTitle(String html, String title) {
+    String safeTitle = title.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+    return "<h1>" + safeTitle + "</h1>" + (html == null ? "" : html);
+  }
+
+  private static String reportFileName(String title) {
+    String safeTitle = title == null ? "" : title.trim()
+        .replaceAll("[\\\\/:*?\"<>|]", "-")
+        .replaceAll("[. ]+$", "");
+    if (safeTitle.isBlank()) {
+      safeTitle = "分析报告";
+    }
+    return safeTitle.endsWith(".docx") ? safeTitle : safeTitle + ".docx";
   }
 }

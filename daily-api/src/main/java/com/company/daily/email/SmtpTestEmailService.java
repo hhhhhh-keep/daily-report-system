@@ -46,7 +46,7 @@ public class SmtpTestEmailService {
         "日报分析系统 SMTP 测试邮件",
         "<p>这是一封由日报分析系统管理员主动触发的 SMTP 测试邮件。</p>"
             + "<p>发送时间：" + sentAt + "</p>",
-        null, null);
+        null, null, null);
     gateway.send(message, settings);
     return new SmtpTestEmailResponse(
         true, "测试邮件已发送，请检查收件箱和垃圾邮件目录。");

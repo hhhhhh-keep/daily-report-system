@@ -42,7 +42,7 @@ class SmtpTestEmailServiceTest {
     assertThat(messageCaptor.getValue().subject()).isEqualTo("日报分析系统 SMTP 测试邮件");
     assertThat(messageCaptor.getValue().recipients()).containsExactly("manager@example.test");
     assertThat(messageCaptor.getValue().ccRecipients()).containsExactly("audit@example.test");
-    assertThat(messageCaptor.getValue().pdf()).isNull();
+    assertThat(messageCaptor.getValue().attachment()).isNull();
     assertThat(settingsCaptor.getValue().host()).isEqualTo("smtp.example.test");
     assertThat(settingsCaptor.getValue().from()).isEqualTo("sender@example.test");
   }

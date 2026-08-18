@@ -43,7 +43,21 @@ public class ReportPeriodStatisticsService {
 
   @Transactional(readOnly = true)
   public ReportPeriodStatisticsResponse statistics(String period, LocalDate anchor) {
-    PeriodWindow window = periodWindow(period, anchor);
+    return statistics(periodWindow(period, anchor));
+  }
+
+  @Transactional(readOnly = true)
+  public ReportPeriodStatisticsResponse statistics(LocalDate start, LocalDate end) {
+    if (start == null || end == null) {
+      throw new IllegalArgumentException("统计开始日期和结束日期不能为空");
+    }
+    if (start.isAfter(end)) {
+      throw new IllegalArgumentException("统计开始日期不能晚于结束日期");
+    }
+    return statistics(new PeriodWindow("CUSTOM", start, end));
+  }
+
+  private ReportPeriodStatisticsResponse statistics(PeriodWindow window) {
     List<LocalDate> workdays = window.start().datesUntil(window.end().plusDays(1))
         .filter(workdayService::isWorkday)
         .toList();

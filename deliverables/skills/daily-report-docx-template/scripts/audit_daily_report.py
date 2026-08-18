@@ -14,7 +14,7 @@ from render_daily_report import ANCHORS, HIDDEN_PROJECT_NAMES
 
 
 REQUIRED_HEADINGS = ("一、总体概况", "二、填报与出勤情况", "三、人员效能分析",
-                     "四、项目连续性分析", "五、项目关联性及协同分析",
+                     "四、当日项目动态", "五、项目关联性及协同分析",
                      "六、风险评估", "七、管理建议")
 FORBIDDEN_TOKENS = ("领导版", "待人工补充", "数据时区", "PRESALES_IN_PROGRESS",
                     "DELIVERY_IN_PROGRESS", "AFTERSALES_IN_PROGRESS", "operations-support",
@@ -46,8 +46,8 @@ def audit_daily_report(path: Path, facts: Mapping[str, object] | None = None) ->
         errors.append("MISSING_REQUIRED_SECTION")
     if any(token in text for token in FORBIDDEN_TOKENS):
         errors.append("FORBIDDEN_PLACEHOLDER")
-    if "覆盖周期：" not in text:
-        errors.append("MISSING_CHINESE_PERIOD_LINE")
+    if "覆盖周期：" in text:
+        errors.append("UNEXPECTED_COVERAGE_PERIOD")
     section = document.sections[0]
     page_settings = {"top_cm": section.top_margin.cm, "bottom_cm": section.bottom_margin.cm,
                      "left_cm": section.left_margin.cm, "right_cm": section.right_margin.cm,

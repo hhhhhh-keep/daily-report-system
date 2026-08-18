@@ -1,9 +1,14 @@
 package com.company.daily.email;
 
 import jakarta.mail.Authenticator;
+import jakarta.mail.MessagingException;
 import jakarta.mail.PasswordAuthentication;
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
+import java.util.ArrayList;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,8 +34,8 @@ public class SmtpEmailGateway implements EmailGateway {
     Session session = buildSession(settings);
     try {
       MimeMessage mime = new MimeMessage(session);
-      boolean hasAttachment = message.pdf() != null
-          && StringUtils.hasText(message.pdfFileName());
+      boolean hasAttachment = message.attachment() != null
+          && StringUtils.hasText(message.attachmentFileName());
       MimeMessageHelper helper = new MimeMessageHelper(mime, hasAttachment, "UTF-8");
       if (StringUtils.hasText(settings.from())) {
         helper.setFrom(settings.from());
@@ -42,7 +47,8 @@ public class SmtpEmailGateway implements EmailGateway {
       helper.setSubject(message.subject());
       helper.setText(toPlainText(message.html()), false);
       if (hasAttachment) {
-        helper.addAttachment(message.pdfFileName(), new ByteArrayResource(message.pdf()));
+        helper.addAttachment(message.attachmentFileName(), new ByteArrayResource(message.attachment()),
+            message.attachmentMimeType());
       }
       jakarta.mail.Transport.send(mime);
     } catch (Exception exception) {
@@ -52,17 +58,30 @@ public class SmtpEmailGateway implements EmailGateway {
   }
 
   static String failureSummary(Throwable failure) {
+    List<String> exceptionTypes = new ArrayList<>();
+    Map<Throwable, Boolean> visited = new IdentityHashMap<>();
     Throwable current = failure;
-    while (current != null) {
+    while (current != null && visited.put(current, Boolean.TRUE) == null) {
+      exceptionTypes.add(current.getClass().getSimpleName());
       try {
         Object code = current.getClass().getMethod("getReturnCode").invoke(current);
         return current.getClass().getSimpleName() + " smtpCode=" + code;
       } catch (ReflectiveOperationException ignored) {
         // The Jakarta Mail API does not expose provider-specific SMTP return codes.
       }
-      current = current.getCause();
+      current = nextFailure(current);
     }
-    return failure.getClass().getSimpleName();
+    return String.join(" -> ", exceptionTypes);
+  }
+
+  private static Throwable nextFailure(Throwable failure) {
+    if (failure.getCause() != null && failure.getCause() != failure) {
+      return failure.getCause();
+    }
+    if (failure instanceof MessagingException messagingException) {
+      return messagingException.getNextException();
+    }
+    return null;
   }
 
   private static Session buildSession(SmtpSettings settings) {
@@ -70,6 +89,7 @@ public class SmtpEmailGateway implements EmailGateway {
     props.put("mail.smtp.host", settings.host());
     props.put("mail.smtp.port", String.valueOf(settings.port()));
     props.put("mail.smtp.auth", String.valueOf(hasAuth(settings)));
+    props.put("mail.smtp.ssl.trust", settings.host());
     if (settings.port() == 465) {
       props.put("mail.smtp.ssl.enable", "true");
     } else if (settings.port() == 587) {

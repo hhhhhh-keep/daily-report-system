@@ -127,7 +127,7 @@ export interface PersonReportPeriodStatistics {
 }
 
 export interface ReportPeriodStatistics {
-  period: 'WEEKLY' | 'MONTHLY'
+  period: 'WEEKLY' | 'MONTHLY' | 'CUSTOM'
   periodStart: string
   periodEnd: string
   workdayCount: number
@@ -184,6 +184,17 @@ export interface ReportStatisticsConfiguration {
   finalSnapshotCronExpression: string
 }
 
+export interface ReportStatisticsSnapshot {
+  id: number
+  snapshotType: 'PROGRESS_1730' | 'FINAL'
+  snapshotDate: string
+  capturedAt: string
+  expectedCount: number
+  submittedCount: number
+  missingCount: number
+  submissionRate: number
+}
+
 export type AnalysisPeriod = 'DAILY' | 'WEEKLY' | 'MONTHLY'
 export type AnalysisSkillKind = 'RULE' | 'TEMPLATE'
 
@@ -214,6 +225,7 @@ export interface AnalysisSkillTrial {
   status: string
   analysisDraft: string | null
   renderedHtml: string | null
+  hasDocument: boolean
   errorSummary: string | null
   startedAt: string
   finishedAt: string | null
@@ -226,6 +238,11 @@ export interface AnalysisPeriodConfiguration {
   enabledModules: string[]
   retentionMonths: number
   includeEvidenceInDelivery: boolean
+  emailEnabled: boolean
+  emailRecipients: string[]
+  emailCcRecipients: string[]
+  emailSubjectTemplate: string
+  reportTitleTemplate: string
 }
 
 export interface AnalysisRuleVersion {
@@ -258,8 +275,10 @@ export interface AnalysisRun {
   analyzedEmployeeCount: number
   advisoryText: string | null
   llmStatus: string | null
+  llmErrorSummary: string | null
   reportAvailable: boolean
   reportFileName: string | null
+  reportMimeType: string | null
   emailStatus: string
   errorSummary: string | null
   retryOfRunId: number | null
@@ -320,8 +339,12 @@ export const adminApi = {
     size?: number
   } = {}) =>
     http.get<Page<ReportSummary>>('/admin/reports', { params }),
-  reportPeriodStatistics: (period: 'WEEKLY' | 'MONTHLY', anchor: string) =>
-    http.get<ReportPeriodStatistics>('/admin/reports/period-statistics', { params: { period, anchor } }),
+  reportPeriodStatistics: (period: 'WEEKLY' | 'MONTHLY' | 'CUSTOM', anchorOrStart: string, end?: string) =>
+    http.get<ReportPeriodStatistics>('/admin/reports/period-statistics', {
+      params: period === 'CUSTOM' ? { start: anchorOrStart, end } : { period, anchor: anchorOrStart },
+    }),
+  exportReportPeriodStatistics: (start: string, end: string) =>
+    http.get('/admin/reports/period-statistics/export', { params: { start, end }, responseType: 'blob' }),
   report: (id: number) => http.get(`/admin/reports/${id}`),
   dashboard: (date?: string) =>
     http.get<DashboardMetrics>('/admin/dashboard', { params: { date } }),
@@ -335,6 +358,10 @@ export const adminApi = {
     http.post<{ sent: boolean; message: string }>('/admin/configuration/email/test'),
   reportStatisticsConfiguration: () =>
     http.get<ReportStatisticsConfiguration>('/admin/configuration/report-statistics'),
+  reportStatisticsSnapshots: (startDate: string, endDate: string) =>
+    http.get<ReportStatisticsSnapshot[]>('/admin/report-statistics-snapshots', { params: { startDate, endDate } }),
+  reportStatisticsSnapshotLatest: () =>
+    http.get<ReportStatisticsSnapshot[]>('/admin/report-statistics-snapshots/latest'),
   updateReportStatisticsConfiguration: (value: ReportStatisticsConfiguration) =>
     http.put<ReportStatisticsConfiguration>('/admin/configuration/report-statistics', value),
   analysisPeriodConfigurations: () =>
@@ -349,6 +376,8 @@ export const adminApi = {
   },
   downloadAnalysisSkill: (id: number) =>
     http.get(`/admin/analysis-skills/download/${id}`, { responseType: 'blob' }),
+  deleteAnalysisSkill: (id: number) =>
+    http.delete(`/admin/analysis-skills/${id}`),
   trialAnalysisSkills: (period: AnalysisPeriod, endDate: string, ruleVersionId: number, templateVersionId: number) =>
     http.post<AnalysisSkillTrial>(`/admin/analysis-skills/${period}/trial`, undefined,
       { params: { endDate, ruleVersionId, templateVersionId }, timeout: 360_000 }),

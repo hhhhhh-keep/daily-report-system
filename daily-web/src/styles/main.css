@@ -43,6 +43,7 @@ button { border: 0; border-radius: 10px; padding: 11px 17px; cursor: pointer; fo
 button:disabled { cursor: wait; opacity: 0.6; }
 .button-primary { color: #fff; background: #155eef; }
 .button-secondary { color: #155eef; border: 1px dashed #84adff; background: #f5f8ff; }
+.button-danger { color: #b42318; border: 1px solid #fecdca; background: #fef3f2; }
 .button-link { padding: 4px; color: #475467; background: transparent; }
 .button-link.danger { color: #b42318; }
 .add-task { width: 100%; padding: 14px; }

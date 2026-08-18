@@ -25,19 +25,34 @@ public class EmailService {
       LocalDate date,
       AnalysisConfiguration configuration,
       ReportArtifact artifact) {
-    if (!configuration.emailEnabled()) {
+    return deliver(runId, date, configuration, new PeriodEmailDeliverySettings(
+        configuration.emailEnabled(), configuration.recipients(), configuration.ccRecipients(),
+        configuration.emailSubjectTemplate().replace("{{date}}", date.toString()), ""), artifact);
+  }
+
+  public EmailDeliveryResult deliver(
+      long runId,
+      LocalDate date,
+      AnalysisConfiguration configuration,
+      PeriodEmailDeliverySettings delivery,
+      ReportArtifact artifact) {
+    if (!delivery.enabled()) {
       return new EmailDeliveryResult("not-requested", null);
     }
-    String subject = configuration.emailSubjectTemplate().replace("{{date}}", date.toString());
+    if (delivery.recipients().isEmpty()) {
+      String error = "该周期已启用邮件发送，但未配置收件人";
+      save(runId, date, "failed", delivery, error);
+      return new EmailDeliveryResult("failed", error);
+    }
     SmtpSettings settings = SmtpSettings.fromConfiguration(configuration, environment);
     try {
-      gateway.send(new EmailMessage(configuration.recipients(), configuration.ccRecipients(),
-          subject, artifact.html(), artifact.pdf(), artifact.fileName()), settings);
-      save(runId, date, "sent", configuration, subject, null);
+      gateway.send(new EmailMessage(delivery.recipients(), delivery.ccRecipients(), delivery.subject(),
+          artifact.html(), artifact.content(), artifact.fileName(), artifact.mimeType()), settings);
+      save(runId, date, "sent", delivery, null);
       return new EmailDeliveryResult("sent", null);
     } catch (EmailDeliveryException exception) {
       String error = exception.getMessage();
-      save(runId, date, "failed", configuration, subject, error);
+      save(runId, date, "failed", delivery, error);
       return new EmailDeliveryResult("failed", error);
     }
   }
@@ -46,13 +61,12 @@ public class EmailService {
       long runId,
       LocalDate date,
       String status,
-      AnalysisConfiguration configuration,
-      String subject,
+      PeriodEmailDeliverySettings delivery,
       String error) {
     jdbcTemplate.update("insert into email_deliveries(run_id,analysis_date,status,recipients,"
         + "cc_recipients,subject,sent_at,error_summary) values (?,?,?,?,?,?,"
         + "case when ?='sent' then current_timestamp else null end,?)",
-        runId, date, status, String.join(",", configuration.recipients()),
-        String.join(",", configuration.ccRecipients()), subject, status, error);
+        runId, date, status, String.join(",", delivery.recipients()),
+        String.join(",", delivery.ccRecipients()), delivery.subject(), status, error);
   }
 }

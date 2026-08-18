@@ -93,7 +93,7 @@ for (date, name), cells in sorted(by_day.items()):
         current = status(clean, ordinal)
         project = project_index(clean)
         project_code = project if project == FALLBACK_PROJECT_CODE else f"JUL-TEST-{project:02d}"
-        risk = "'dependency','technical-expert','Imported blocker needs external coordination'" if current == "blocked" else "null,null,null"
+        risk = "null,null,null"
         work_stage = q(stage(clean)) if work_type == "project-support" else "null"
         lines.append("insert into daily_tasks(report_id,time_period,project_id,work_type,work_stage,participation_role,progress_result,current_status,issue_type,collaboration_role,collaboration_requirement) values ((select id from daily_reports where employee_id=(select id from employees where name=%s) and report_date=%s),%s,(select id from projects where code=%s),%s,%s,'owner',%s,%s,%s);" % (q(name), q(date), q(period), q(project_code), q(work_type), work_stage, q(clean), q(current), risk))
 lines.append("commit;")

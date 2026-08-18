@@ -10,4 +10,9 @@ public record AnalysisPeriodConfigurationRequest(
     @NotBlank String cronExpression,
     @NotEmpty List<@NotBlank String> enabledModules,
     @Min(1) int retentionMonths,
-    boolean includeEvidenceInDelivery) {}
+    boolean includeEvidenceInDelivery,
+    boolean emailEnabled,
+    List<String> emailRecipients,
+    List<String> emailCcRecipients,
+    String emailSubjectTemplate,
+    String reportTitleTemplate) {}

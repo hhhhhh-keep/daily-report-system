@@ -22,8 +22,10 @@ BLUE = "1F4E78"
 LIGHT_BLUE = "D9EAF7"
 LIGHT_GRAY = "F2F2F2"
 HIDDEN_PROJECT_NAMES = {"暂无正式项目", "内部专项"}
-TECHNICAL_ID = re.compile(r"(?:employee|project)-[A-Za-z0-9_-]+", re.IGNORECASE)
-TECHNICAL_PAREN = re.compile(r"[（(]([^（）()]*(?:employee|project)-[^（）()]*)[）)]", re.IGNORECASE)
+TECHNICAL_ID = re.compile(r"(?:employee|project|task)-[A-Za-z0-9_/-]+", re.IGNORECASE)
+TECHNICAL_PAREN = re.compile(r"[（(]([^（）()]*(?:employee|project|task)-[^（）()]*)[）)]", re.IGNORECASE)
+IMPORTED_BLOCKER = "Imported blocker needs external coordination"
+UNKNOWN_STATUS_CODE = re.compile(r"\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\b")
 
 
 def create_template(path: Path) -> Path:
@@ -52,10 +54,7 @@ def render_daily_report(template_path: Path, facts: Mapping[str, object],
     meta = document.add_paragraph()
     meta.paragraph_format.line_spacing = 1.5
     report_date = str(period.get("report_date") or period.get("end_date") or period.get("start_date") or "")
-    start_date = str(period.get("start_date") or report_date)
-    end_date = str(period.get("end_date") or report_date)
-    _add_run(meta, f"{_chinese_date(report_date)}　覆盖周期：{_chinese_date(start_date)}至{_chinese_date(end_date, include_year=False)}",
-             "仿宋_GB2312", 11)
+    _add_run(meta, _chinese_date(report_date), "仿宋_GB2312", 11)
 
     _dashboard(document, attendance, metrics, _mapping(facts.get("status_distribution")))
     _heading(document, "一、总体概况")
@@ -67,7 +66,7 @@ def render_daily_report(template_path: Path, facts: Mapping[str, object],
     _heading(document, "三、人员效能分析")
     _efficiency_narrative(document, facts, analysis)
 
-    _heading(document, "四、项目连续性分析")
+    _heading(document, "四、当日项目动态")
     _continuity_narrative(document, facts, analysis)
 
     _heading(document, "五、项目关联性及协同分析")
@@ -175,11 +174,12 @@ def _continuity_narrative(document: Document, facts: Mapping[str, object],
         }
         for index, item in enumerate(deterministic, 1):
             active_dates = [_chinese_date(value, include_year=False) for value in _string_list(item.get("active_dates"))]
+            task_count = _project_task_count(facts, item)
             _numbered_body(
                 document, index,
                 f"{_display(item.get('project_name'))}：{classification_names.get(item.get('classification'), '窗口内有动态')}；"
                 f"动态日期为{_join(active_dates)}；参与人员{_join(item.get('people'))}；"
-                f"主要动作{_join(item.get('actions'))}；明确产出{_join(item.get('outputs'))}。",
+                f"当日记录{task_count}项事项，已形成项目推进动态，详情见原始日报证据。",
             )
         rendered = True
 
@@ -198,7 +198,7 @@ def _continuity_narrative(document: Document, facts: Mapping[str, object],
         _unlinked_projects(document, unlinked)
         rendered = True
     if not rendered:
-        _body(document, "覆盖周期内未识别到可形成连续性判断的项目动态。")
+        _body(document, "当日未识别到项目动态。")
 
 
 def _association_narrative(document: Document, facts: Mapping[str, object],
@@ -222,7 +222,7 @@ def _association_narrative(document: Document, facts: Mapping[str, object],
         for index, item in enumerate(derived, 1):
             _numbered_body(document, index, item)
     else:
-        _body(document, "覆盖周期内未形成可核验的多人或跨项目协同关系。")
+        _body(document, "当日未形成可核验的多人或跨项目协同关系。")
 
 
 def _attendance_narrative(document: Document, attendance: Mapping[str, object]) -> None:
@@ -270,18 +270,14 @@ def _efficiency_narrative(document: Document, facts: Mapping[str, object],
         name = _display(item.get("name"))
         details = context.get(name, {})
         projects = _string_list(details.get("projects"))[:3]
-        actions = _string_list(details.get("actions"))[:3]
-        outputs = _string_list(details.get("outputs"))[:2]
         summary = (f"{name}：当日记录{_display(item.get('task_count'))}项事项，完成"
                    f"{_display(item.get('completed_task_count'))}项、进行中"
                    f"{_display(item.get('in_progress_task_count'))}项、阻塞"
                    f"{_display(item.get('blocked_task_count'))}项")
         if projects:
             summary += f"；参与{_join(projects)}"
-        if actions:
-            summary += f"，相关动作包括{_join(actions)}"
-        if outputs:
-            summary += f"，明确产出为{_join(outputs)}"
+        if projects:
+            summary += "，已记录相关项目推进动态，详情见原始日报证据"
         lead = int(item.get("lead_task_count") or 0)
         collaboration = int(item.get("collaboration_task_count") or 0)
         if lead or collaboration:
@@ -293,24 +289,21 @@ def _efficiency_narrative(document: Document, facts: Mapping[str, object],
 def _efficiency_context(facts: Mapping[str, object]) -> dict[str, dict[str, list[str]]]:
     context: dict[str, dict[str, list[str]]] = {}
 
-    def add(name: object, project: object, actions: object, outputs: object) -> None:
+    def add(name: object, project: object) -> None:
         if not isinstance(name, str) or not name or not _is_visible_project(project):
             return
-        row = context.setdefault(name, {"projects": [], "actions": [], "outputs": []})
-        for key, values in (("projects", [project]), ("actions", _string_list(actions)),
-                            ("outputs", _string_list(outputs))):
-            for value in values:
-                text = str(value).strip()
-                if text and text not in row[key]:
-                    row[key].append(text)
+        row = context.setdefault(name, {"projects": []})
+        text = str(project).strip()
+        if text and text not in row["projects"]:
+            row["projects"].append(text)
 
     for item in _list(facts.get("project_continuity")):
         for name in _string_list(item.get("people")):
-            add(name, item.get("project_name"), item.get("actions"), item.get("outputs"))
+            add(name, item.get("project_name"))
     for section in ("formal_project_dynamics", "unlinked_project_dynamics"):
         for item in _list(facts.get(section)):
             for name in (*_string_list(item.get("lead_people")), *_string_list(item.get("collaborator_people"))):
-                add(name, item.get("project_name"), [], item.get("outputs"))
+                add(name, item.get("project_name"))
     return context
 
 
@@ -322,13 +315,22 @@ def _formal_projects(document: Document, value: object, analysis: Mapping[str, o
     highlights = {item.get("project_id"): item.get("summary") for item in _list(analysis.get("project_highlights") if analysis else None)}
     for index, item in enumerate(items, 1):
         people = "主导" + _join(item.get("lead_people")) + "，协同" + _join(item.get("collaborator_people"))
-        outputs = highlights.get(item.get("project_id")) or _join(item.get("outputs"))
-        blockers = _join(item.get("blockers"))
+        highlight = highlights.get(item.get("project_id"))
+        task_count = _display(item.get("task_count"))
+        completed = _display(item.get("completed_task_count"))
+        blocked = int(item.get("blocked_task_count") or 0)
+        dynamic_summary = highlight or (
+            f"当日记录{task_count}项事项，其中完成{completed}项、阻塞{blocked}项；"
+            "已形成项目推进动态，详情见原始日报证据"
+        )
+        blocker_summary = (
+            "阻塞情况：存在阻塞事项，待补充具体原因。" if blocked > 0 else "阻塞情况：无。"
+        )
         summary = (
             f"{_display(item.get('project_name'))}，负责人{item.get('owner_name') or '未维护'}："
             f"当前状态/阶段为{_display(item.get('state'))}/{_display(item.get('current_stage'))}；"
-            f"当日{people}；形成动态：{outputs or '有事项记录，未形成明确产出'}；"
-            f"阻塞情况：{blockers}。"
+            f"当日{people}；{dynamic_summary}；"
+            f"{blocker_summary}"
         )
         _numbered_body(document, index, summary)
 
@@ -345,6 +347,15 @@ def _unlinked_projects(document: Document, value: object) -> None:
             f"{_display(item.get('project_name'))}：涉及人员{_join(people)}，当日事项"
             f"{_display(item.get('task_count'))}项。该名称来自日报语义识别，需核对项目维护主数据后确认关联关系。",
         )
+
+
+def _project_task_count(facts: Mapping[str, object], item: Mapping[str, object]) -> str:
+    project_id = item.get("project_id")
+    for section in ("formal_project_dynamics", "unlinked_project_dynamics"):
+        for candidate in _list(facts.get(section)):
+            if candidate.get("project_id") == project_id:
+                return _display(candidate.get("task_count"))
+    return "若干"
 
 
 def _stale_projects(document: Document, value: object) -> None:
@@ -450,6 +461,8 @@ def _contains_hidden_project(text: str) -> bool:
 def _clean_narrative(text: object) -> str:
     value = str(text or "")
 
+    value = value.replace(IMPORTED_BLOCKER, "存在阻塞事项，待补充具体原因")
+
     value = re.sub(
         r"其余动态[^，,。；;]*(?:内部专项|暂无正式项目)[^，,。；;]*[，,]?",
         "",
@@ -460,10 +473,18 @@ def _clean_narrative(text: object) -> str:
         ("PRESALES_IN_PROGRESS", "售前推进中"),
         ("DELIVERY_IN_PROGRESS", "交付推进中"),
         ("AFTERSALES_IN_PROGRESS", "售后运维中"),
+        ("BLOCKED", "受阻"),
+        ("in_progress", "进行中"),
+        ("blocked", "受阻"),
+        ("completed", "已完成"),
+        ("planned", "计划中"),
         ("operations-support", "运维保障"),
     ):
         value = value.replace(code, label)
         value = value.replace(f"({label})", f"（{label}）")
+
+    value = UNKNOWN_STATUS_CODE.sub("未识别状态", value)
+    value = re.sub(r"(?<=[\u4e00-\u9fff])\s+(?=[\u4e00-\u9fff])", "", value)
 
     def unwrap(match: re.Match[str]) -> str:
         remaining = TECHNICAL_ID.sub("", match.group(1))
@@ -570,6 +591,11 @@ def _display(value: object) -> str:
         "DELIVERY_IN_PROGRESS": "交付推进中",
         "PRESALES_IN_PROGRESS": "售前推进中",
         "AFTERSALES_IN_PROGRESS": "售后运维中",
+        "BLOCKED": "受阻",
+        "in_progress": "进行中",
+        "blocked": "受阻",
+        "completed": "已完成",
+        "planned": "计划中",
         "COMPLETED": "已完成",
         "PAUSED": "暂停",
         "implementation": "实施阶段",

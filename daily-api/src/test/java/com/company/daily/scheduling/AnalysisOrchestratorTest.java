@@ -11,6 +11,9 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.company.daily.analysis.AnalysisPeriod;
@@ -39,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import tools.jackson.databind.ObjectMapper;
 
 class AnalysisOrchestratorTest {
@@ -62,7 +66,10 @@ class AnalysisOrchestratorTest {
     AnalysisSkillService.PublishedSkillPair pair = pair();
     AtomicReference<String> completedStatus = new AtomicReference<>();
     AtomicReference<String> completedLlmStatus = new AtomicReference<>();
+    AtomicReference<String> completedLlmError = new AtomicReference<>();
     AtomicReference<String> completedError = new AtomicReference<>();
+    AtomicReference<byte[]> completedDocument = new AtomicReference<>();
+    AtomicReference<String> completedFileName = new AtomicReference<>();
 
     when(periodService.get(AnalysisPeriod.DAILY)).thenReturn(new AnalysisPeriodConfiguration(
         AnalysisPeriod.DAILY, true, "0 0 22 * * ?", List.of("personnel-efficiency"), 12, true));
@@ -77,18 +84,22 @@ class AnalysisOrchestratorTest {
             "failed", "AI 语义分析不可用，已生成基础报告"));
     when(metricsService.calculate(window.startDate(), window.endDate(), 8)).thenReturn(metrics);
     when(ruleService.evaluate(eq(metrics), any())).thenReturn(List.of());
-    when(reportService.generate(eq(configuration), eq(metrics), anyList(), anyString()))
+    when(reportService.generate(eq(configuration), eq(metrics), anyList(), anyString(), anyString()))
         .thenReturn(new ReportArtifact("<section>fallback</section>", new byte[] {2}, "daily.pdf"));
-    when(emailService.deliver(anyLong(), eq(window.endDate()), eq(configuration), any()))
+    when(emailService.deliver(anyLong(), eq(window.endDate()), eq(configuration), any(), any()))
         .thenReturn(new EmailDeliveryResult("not-requested", null));
     when(runStore.get(41L)).thenReturn(mock(AnalysisRunResponse.class));
     doAnswer(invocation -> {
       completedStatus.set(invocation.getArgument(1));
       completedLlmStatus.set(invocation.getArgument(6));
-      completedError.set(invocation.getArgument(11));
+      completedLlmError.set(invocation.getArgument(7));
+      completedDocument.set(invocation.getArgument(9));
+      completedFileName.set(invocation.getArgument(10));
+      completedError.set(invocation.getArgument(13));
       return null;
     }).when(runStore).complete(eq(41L), anyString(), anyInt(), anyString(), anyString(),
-        anyString(), anyString(), any(), any(), anyString(), anyString(), nullable(String.class));
+        anyString(), anyString(), nullable(String.class), any(), any(), anyString(), anyString(),
+        anyString(), nullable(String.class));
 
     AnalysisOrchestrator orchestrator = new AnalysisOrchestrator(configurationService, metricsService,
         ruleService, mock(LlmAnalysisAdapter.class), reportService, emailService, runStore,
@@ -99,7 +110,29 @@ class AnalysisOrchestratorTest {
 
     assertThat(completedStatus).hasValue("partial-failure");
     assertThat(completedLlmStatus).hasValue("failed");
+    assertThat(completedLlmError).hasValue("AI 语义分析不可用，已生成基础报告");
+    assertThat(completedDocument.get()).containsExactly((byte) 1);
+    assertThat(completedFileName).hasValue("日报工作分析报告（截至2026-07-31）.docx");
     assertThat(completedError.get()).contains("基础报告");
+    ArgumentCaptor<ReportArtifact> artifactCaptor = ArgumentCaptor.forClass(ReportArtifact.class);
+    verify(emailService).deliver(anyLong(), eq(window.endDate()), eq(configuration), any(),
+        artifactCaptor.capture());
+    assertThat(artifactCaptor.getValue().content()).containsExactly((byte) 1);
+    assertThat(artifactCaptor.getValue().mimeType()).isEqualTo(ReportArtifact.DOCX_MIME_TYPE);
+    verify(reportService, never()).generate(any(), any(), anyList(), anyString(), anyString());
+
+    when(runStore.start(eq(window), eq("manual"), anyList(), eq("{}"), isNull(), eq(0)))
+        .thenReturn(42L);
+    when(executor.execute(any(), any(), anyString(), anyString(), eq("{}"), any(), any()))
+        .thenReturn(new SkillAnalysisExecutor.SkillExecution(
+            "SUCCEEDED", "{}", null, "<section>基础报告</section>", null,
+            "succeeded", null));
+    when(runStore.get(42L)).thenReturn(mock(AnalysisRunResponse.class));
+
+    orchestrator.run(window, "manual");
+
+    verify(runStore).fail(42L, "IllegalStateException: Skill 未生成 Word 报告");
+    verify(emailService, times(1)).deliver(anyLong(), eq(window.endDate()), eq(configuration), any(), any());
   }
 
   private static AnalysisConfiguration configuration() {

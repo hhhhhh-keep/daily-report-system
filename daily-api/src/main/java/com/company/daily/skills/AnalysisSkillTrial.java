@@ -14,6 +14,7 @@ public record AnalysisSkillTrial(
     String status,
     String analysisDraft,
     String renderedHtml,
+    boolean hasDocument,
     String errorSummary,
     Instant startedAt,
     Instant finishedAt) {}

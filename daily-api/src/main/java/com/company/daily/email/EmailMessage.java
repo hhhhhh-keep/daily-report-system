@@ -7,5 +7,6 @@ public record EmailMessage(
     List<String> ccRecipients,
     String subject,
     String html,
-    byte[] pdf,
-    String pdfFileName) {}
+    byte[] attachment,
+    String attachmentFileName,
+    String attachmentMimeType) {}

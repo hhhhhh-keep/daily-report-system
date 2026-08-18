@@ -91,6 +91,15 @@ public class ReportStatisticsService {
         startDate, endDate).stream().map(this::response).toList();
   }
 
+  @Transactional(readOnly = true)
+  public List<ReportStatisticsSnapshotResponse> latest() {
+    return java.util.Arrays.stream(ReportStatisticsSnapshotType.values())
+        .map(snapshotRepository::findTopBySnapshotTypeOrderByCapturedAtDesc)
+        .flatMap(Optional::stream)
+        .map(this::response)
+        .toList();
+  }
+
   private List<TeamSubmissionStatistics> teamStatistics(
       List<StatisticsEmployee> employees, Set<Long> submittedEmployeeIds) {
     Map<String, List<StatisticsEmployee>> byTeam = employees.stream().collect(Collectors.groupingBy(

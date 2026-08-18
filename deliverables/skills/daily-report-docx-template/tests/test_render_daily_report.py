@@ -114,10 +114,10 @@ class RenderDailyReportTests(unittest.TestCase):
         audit = audit_daily_report(path, FACTS)
 
         self.assertTrue(audit.ok, audit.errors)
-        for required in ("行一二部工作日报", "2026年7月31日　覆盖周期：2026年7月27日至7月31日",
+        for required in ("行一二部工作日报", "2026年7月31日",
                          "截至17:30", "截至22:00", "王达伟", "吴鹏", "周菁",
                          "人员效能分析", "钱程", "知识库建设项目", "连云港健康小屋",
-                         "存量交付项目", "项目连续性分析", "项目关联性及协同分析",
+                         "存量交付项目", "当日项目动态", "项目关联性及协同分析",
                          "风险评估", "管理建议"):
             self.assertIn(required, text)
         self.assertNotIn("待人工补充", text)
@@ -133,7 +133,7 @@ class RenderDailyReportTests(unittest.TestCase):
                     if paragraph.style.name in {"Heading 1", "Heading 2"}]
         self.assertEqual(headings, [
             "一、总体概况", "二、填报与出勤情况", "三、人员效能分析",
-            "四、项目连续性分析", "五、项目关联性及协同分析",
+            "四、当日项目动态", "五、项目关联性及协同分析",
             "六、风险评估", "七、管理建议",
         ])
         with zipfile.ZipFile(path) as archive:
@@ -205,15 +205,35 @@ class RenderDailyReportTests(unittest.TestCase):
         self.assertNotIn("数据口径说明", text)
         self.assertNotIn("事后重建", text)
 
-    def test_facts_only_efficiency_mentions_people_projects_actions_and_outputs(self) -> None:
-        path = render_daily_report(TEMPLATE, FACTS, None, self.output)
+    def test_facts_only_report_uses_project_metrics_not_raw_daily_text(self) -> None:
+        facts = deepcopy(FACTS)
+        raw_daily_text = "完成省应急厅项目招标文件编制，随后开展组内审核、客户交叉审核，并根据审核意见优化调整文稿后交付客户。"
+        facts["project_continuity"][0]["actions"] = [raw_daily_text]
+        facts["project_continuity"][0]["outputs"] = [raw_daily_text]
+        facts["formal_project_dynamics"][0]["outputs"] = [raw_daily_text]
+        path = render_daily_report(TEMPLATE, facts, None, self.output)
         document = Document(path)
         text = "\n".join(p.text for p in document.paragraphs)
 
         self.assertIn("钱程：", text)
         self.assertIn("参与知识库建设项目", text)
-        self.assertIn("模型选型", text)
-        self.assertIn("完成Embedding模型对比", text)
+        self.assertIn("当日记录8项事项", text)
+        self.assertIn("详情见原始日报证据", text)
+        self.assertNotIn(raw_daily_text, text)
+
+    def test_fallback_formal_project_summary_does_not_render_raw_output(self) -> None:
+        facts = deepcopy(FACTS)
+        raw_daily_text = "完成省应急厅项目招标文件编制，先后开展组内审核和客户交叉审核，根据意见优化后交付客户。"
+        facts["project_continuity"] = []
+        facts["formal_project_dynamics"][0]["outputs"] = [raw_daily_text]
+        path = render_daily_report(TEMPLATE, facts, None, self.output)
+        document = Document(path)
+        text = "\n".join(p.text for p in document.paragraphs)
+
+        self.assertIn("知识库建设项目，负责人钱程", text)
+        self.assertIn("当日记录5项事项，其中完成3项、阻塞1项", text)
+        self.assertIn("详情见原始日报证据", text)
+        self.assertNotIn(raw_daily_text, text)
 
     def test_readability_cleanup_preserves_business_parentheses(self) -> None:
         cleaned = _clean_narrative("钱程（employee-27）推进采购项目（标段二）（project-1），当前停滞4天。")
@@ -223,13 +243,20 @@ class RenderDailyReportTests(unittest.TestCase):
     def test_readability_cleanup_translates_project_state_codes(self) -> None:
         cleaned = _clean_narrative(
             "项目历史状态为事后重建(PRESALES_IN_PROGRESS)，交付状态为DELIVERY_IN_PROGRESS，"
-            "售后状态为AFTERSALES_IN_PROGRESS/operations-support。"
+            "售后状态为AFTERSALES_IN_PROGRESS/operations-support，阻塞状态为BLOCKED；状态证据为blocked和completed。"
         )
 
         self.assertEqual(
             cleaned,
-            "项目历史状态为事后重建（售前推进中），交付状态为交付推进中，售后状态为售后运维中/运维保障。",
+            "项目历史状态为事后重建（售前推进中），交付状态为交付推进中，售后状态为售后运维中/运维保障，阻塞状态为受阻；状态证据为受阻和已完成。",
         )
+
+    def test_readability_cleanup_replaces_imported_placeholder_and_unknown_status_code(self) -> None:
+        cleaned = _clean_narrative(
+            "阻塞说明统一标记为 Imported blocker needs external coordination，当前状态为 FUTURE_EXTERNAL_STATUS。"
+        )
+
+        self.assertEqual(cleaned, "阻塞说明统一标记为存在阻塞事项，待补充具体原因，当前状态为未识别状态。")
 
     def test_readability_cleanup_removes_internal_project_classification_clause(self) -> None:
         cleaned = _clean_narrative(
@@ -237,6 +264,11 @@ class RenderDailyReportTests(unittest.TestCase):
         )
 
         self.assertEqual(cleaned, "正式在管项目共4个，跨组协同以疾控AI项目为主。")
+
+    def test_readability_cleanup_removes_internal_task_identifiers_in_parentheses(self) -> None:
+        cleaned = _clean_narrative("明确记录为阻塞状态（task-5703-afternoon/morning），请跟进客户侧验证。")
+
+        self.assertEqual(cleaned, "明确记录为阻塞状态，请跟进客户侧验证。")
 
     def test_valid_analysis_avoids_verbose_risk_duplicates_and_keeps_stale_alerts(self) -> None:
         facts = deepcopy(FACTS)

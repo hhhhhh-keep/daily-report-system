@@ -9,6 +9,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.company.daily.analysis.AnalysisPeriod;
@@ -16,11 +17,42 @@ import com.company.daily.analysis.AnalysisPeriodWindow;
 import com.company.daily.analysis.AnalysisPeriodWindowService;
 import com.company.daily.analysis.AnalysisSourceSnapshotService;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 
 class AnalysisSkillServicePersistenceTest {
+  @Test
+  @SuppressWarnings("unchecked")
+  void trialListDoesNotFetchSourceSnapshots() {
+    JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
+    when(jdbcTemplate.query(anyString(), any(RowMapper.class), eq("DAILY"))).thenReturn(List.of());
+    AnalysisSkillService service = new AnalysisSkillService(jdbcTemplate,
+        mock(SkillPackageValidator.class), mock(AnalysisPeriodWindowService.class),
+        mock(AnalysisSourceSnapshotService.class), mock(SkillAnalysisExecutor.class));
+
+    service.trials(AnalysisPeriod.DAILY);
+
+    verify(jdbcTemplate).query(argThat(sql -> !sql.contains("*")
+        && !sql.contains("source_snapshot_json")), any(RowMapper.class), eq("DAILY"));
+  }
+
+  @Test
+  void deletingDraftVersionRemovesItsTrialHistory() {
+    JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
+    AnalysisSkillService service = spy(new AnalysisSkillService(jdbcTemplate,
+        mock(SkillPackageValidator.class), mock(AnalysisPeriodWindowService.class),
+        mock(AnalysisSourceSnapshotService.class), mock(SkillAnalysisExecutor.class)));
+    doReturn(version(1, AnalysisSkillKind.RULE)).when(service).get(1);
+    service.delete(1);
+
+    verify(jdbcTemplate).update("delete from analysis_skill_trials where rule_skill_version_id=? or template_skill_version_id=?",
+        1L, 1L);
+    verify(jdbcTemplate).update("delete from analysis_skill_versions where id=?", 1L);
+  }
+
   @Test
   void persistsRunningTrialBeforeStartingTheLongModelExecution() {
     JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);

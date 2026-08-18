@@ -23,4 +23,9 @@ public class ReportStatisticsSnapshotController {
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
     return service.list(startDate, endDate);
   }
+
+  @GetMapping("/latest")
+  public List<ReportStatisticsSnapshotResponse> latest() {
+    return service.latest();
+  }
 }

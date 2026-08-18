@@ -28,8 +28,7 @@ const latestTrialSuccessful = computed(() => latestTrial.value?.status === 'SUCC
   && !latestTrial.value.errorSummary)
 const canPublish = computed(() => Boolean(latestTrialSuccessful.value
   && selected.value.RULE && selected.value.TEMPLATE))
-const latestTrialHasDocument = computed(() => versions.value.TEMPLATE
-  .some(version => version.id === latestTrial.value?.templateSkillVersionId && Boolean(version.runtimeProfile)))
+const latestTrialHasDocument = computed(() => latestTrial.value?.hasDocument === true)
 
 function versionStatus(status: string) {
   return ({ DRAFT: '草稿', PUBLISHED: '已发布', HISTORICAL: '已归档' } as Record<string, string>)[status] ?? '未知状态'
@@ -94,6 +93,15 @@ async function publish() {
   try { await adminApi.publishAnalysisSkills(period.value, selected.value.RULE, selected.value.TEMPLATE); message.value = '规则与模板已成对发布'; await load() }
   catch (error) { message.value = apiError(error).message }
 }
+async function deleteVersion(version: AnalysisSkillVersion) {
+  if (!window.confirm(`确定删除版本 v${version.versionNumber} 吗？此操作不可恢复。`)) return
+  try {
+    await adminApi.deleteAnalysisSkill(version.id)
+    message.value = `版本 v${version.versionNumber} 已删除`
+    await load()
+  }
+  catch (error) { message.value = apiError(error).message }
+}
 function download(id: number) { window.open(`/api/admin/analysis-skills/download/${id}`, '_blank') }
 function downloadDocument(trialId: number) {
   window.open(`/api/admin/analysis-skills/trials/${trialId}/document`, '_blank')
@@ -116,7 +124,7 @@ onUnmounted(() => { if (trialPollTimer) clearTimeout(trialPollTimer) })
           <h2>{{ names[period] }}{{ slot.label }}</h2>
           <label>上传 ZIP 文件<input type="file" accept=".zip,application/zip" @change="upload(slot.kind, $event)" /></label>
           <label>用于试运行 / 发布的版本<select v-model="selected[slot.kind]"><option :value="null">请选择</option><option v-for="version in versions[slot.kind]" :key="version.id" :value="version.id">v{{ version.versionNumber }}（{{ versionStatus(version.status) }}）</option></select></label>
-          <ul v-if="versions[slot.kind].length"><li v-for="version in versions[slot.kind]" :key="version.id"><strong>版本 v{{ version.versionNumber }}</strong><br /><small>{{ version.validationMessage ? '校验通过' : '待校验' }} · {{ versionStatus(version.status) }}</small> <button type="button" @click="download(version.id)">下载</button></li></ul>
+          <ul v-if="versions[slot.kind].length"><li v-for="version in versions[slot.kind]" :key="version.id"><strong>版本 v{{ version.versionNumber }}</strong><br /><small>{{ version.validationMessage ? '校验通过' : '待校验' }} · {{ versionStatus(version.status) }}</small> <button type="button" @click="download(version.id)">下载</button><button v-if="version.status === 'DRAFT'" data-testid="delete-skill-version" type="button" class="button-danger" @click="deleteVersion(version)">删除</button></li></ul>
           <p v-else class="field-hint">尚未上传此类 ZIP 文件。</p>
         </article>
       </div>
@@ -124,7 +132,7 @@ onUnmounted(() => { if (trialPollTimer) clearTimeout(trialPollTimer) })
       <section class="form-card">
         <h2>成对试运行与发布</h2>
         <p>先生成分析结论，再生成管理报告。两者针对同一历史周期试运行成功后，才可成对发布。</p>
-        <label>历史周期结束日期<input v-model="endDate" type="date" /></label><button data-testid="run-skill-trial" class="button-secondary" type="button" :disabled="!selected.RULE || !selected.TEMPLATE || isTrialRunning" @click="runTrial">{{ isTrialRunning ? '正在试运行…' : '试运行所选版本' }}</button>
+        <label>报告截止日期<input v-model="endDate" type="date" /></label><p class="field-hint">请选择要生成报告的最后一个工作日。日报只看这一天；周报统计本周一至这一天；月报统计本月1日至这一天。项目未更新提醒也截至这一天计算。</p><button data-testid="run-skill-trial" class="button-secondary" type="button" :disabled="!selected.RULE || !selected.TEMPLATE || isTrialRunning" @click="runTrial">{{ isTrialRunning ? '正在试运行…' : '试运行所选版本' }}</button>
         <button class="button-primary" type="button" :disabled="!canPublish" @click="publish">成对发布</button>
         <p v-if="message" class="feedback" role="status">{{ message }}</p>
       </section>

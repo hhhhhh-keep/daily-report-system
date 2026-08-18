@@ -18,6 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AnalysisSkillService {
+  private static final String VERSION_COLUMNS = "id,analysis_period,skill_kind,version_number,status,skill_name,"
+      + "description,package_name,checksum,validation_message,runtime_profile,trial_succeeded_at,published_at,created_at";
+  private static final String TRIAL_COLUMNS = "t.id,t.analysis_period,t.rule_skill_version_id,t.template_skill_version_id,"
+      + "t.period_start,t.period_end,t.status,t.analysis_draft,t.rendered_html,t.error_summary,t.started_at,t.finished_at";
   private final JdbcTemplate jdbcTemplate;
   private final SkillPackageValidator validator;
   private final AnalysisPeriodWindowService windowService;
@@ -39,13 +43,13 @@ public class AnalysisSkillService {
 
   @Transactional(readOnly = true)
   public List<AnalysisSkillVersion> list(AnalysisPeriod period, AnalysisSkillKind kind) {
-    return jdbcTemplate.query("select * from analysis_skill_versions where analysis_period=? and skill_kind=? "
+    return jdbcTemplate.query("select " + VERSION_COLUMNS + " from analysis_skill_versions where analysis_period=? and skill_kind=? "
         + "order by version_number desc", this::mapVersion, period.name(), kind.name());
   }
 
   @Transactional(readOnly = true)
   public Optional<AnalysisSkillVersion> published(AnalysisPeriod period, AnalysisSkillKind kind) {
-    return jdbcTemplate.query("select * from analysis_skill_versions where analysis_period=? and skill_kind=? "
+    return jdbcTemplate.query("select " + VERSION_COLUMNS + " from analysis_skill_versions where analysis_period=? and skill_kind=? "
         + "and status='PUBLISHED'", this::mapVersion, period.name(), kind.name()).stream().findFirst();
   }
 
@@ -128,13 +132,29 @@ public class AnalysisSkillService {
 
   @Transactional(readOnly = true)
   public List<AnalysisSkillTrial> trials(AnalysisPeriod period) {
-    return jdbcTemplate.query("select * from analysis_skill_trials where analysis_period=? order by started_at desc",
+    return jdbcTemplate.query("select " + TRIAL_COLUMNS + ",exists(select 1 from analysis_skill_artifacts a where a.trial_id=t.id "
+        + "and a.artifact_type='REPORT_DOCX') as has_document from analysis_skill_trials t "
+        + "where t.analysis_period=? order by t.started_at desc",
         this::mapTrial, period.name());
   }
 
   @Transactional(readOnly = true)
   public AnalysisSkillVersion get(long id) {
-    return jdbcTemplate.queryForObject("select * from analysis_skill_versions where id=?", this::mapVersion, id);
+    return jdbcTemplate.queryForObject("select " + VERSION_COLUMNS + " from analysis_skill_versions where id=?",
+        this::mapVersion, id);
+  }
+
+  @Transactional
+  public void delete(long id) {
+    AnalysisSkillVersion version = get(id);
+    if (version.status() != AnalysisSkillStatus.DRAFT) {
+      throw new IllegalArgumentException("仅草稿版本可以删除");
+    }
+    jdbcTemplate.update("update analysis_runs set rule_skill_version_id=null where rule_skill_version_id=?", id);
+    jdbcTemplate.update("update analysis_runs set template_skill_version_id=null where template_skill_version_id=?", id);
+    jdbcTemplate.update("delete from analysis_skill_trials where rule_skill_version_id=? or template_skill_version_id=?",
+        id, id);
+    jdbcTemplate.update("delete from analysis_skill_versions where id=?", id);
   }
 
   @Transactional(readOnly = true)
@@ -192,7 +212,9 @@ public class AnalysisSkillService {
   }
 
   private AnalysisSkillTrial getTrial(long id) {
-    return jdbcTemplate.queryForObject("select * from analysis_skill_trials where id=?", this::mapTrial, id);
+    return jdbcTemplate.queryForObject("select " + TRIAL_COLUMNS + ",exists(select 1 from analysis_skill_artifacts a where a.trial_id=t.id "
+        + "and a.artifact_type='REPORT_DOCX') as has_document from analysis_skill_trials t where t.id=?",
+        this::mapTrial, id);
   }
 
   private AnalysisSkillVersion mapVersion(ResultSet resultSet, int row) throws SQLException {
@@ -211,7 +233,7 @@ public class AnalysisSkillService {
         AnalysisPeriod.valueOf(resultSet.getString("analysis_period")), resultSet.getLong("rule_skill_version_id"),
         resultSet.getLong("template_skill_version_id"), resultSet.getObject("period_start", LocalDate.class),
         resultSet.getObject("period_end", LocalDate.class), resultSet.getString("status"),
-        resultSet.getString("analysis_draft"), resultSet.getString("rendered_html"),
+        resultSet.getString("analysis_draft"), resultSet.getString("rendered_html"), resultSet.getBoolean("has_document"),
         resultSet.getString("error_summary"), instant(resultSet, "started_at"), instant(resultSet, "finished_at"));
   }
 

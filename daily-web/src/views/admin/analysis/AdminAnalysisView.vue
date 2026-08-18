@@ -1,28 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import AdminLayout from '@/layouts/AdminLayout.vue'
-import { adminApi, type AnalysisPeriod, type DimensionResult } from '@/api/admin'
+import { adminApi, type AnalysisPeriod, type AnalysisRun } from '@/api/admin'
 import { apiError } from '@/api/http'
 
-type Conclusion = { title: string; summary: string; evidence: string[]; recommendation: string }
-type AnalysisSummary = { result: DimensionResult; conclusions: Conclusion[] }
-const results = ref<DimensionResult[]>([])
+const runs = ref<AnalysisRun[]>([])
 const pending = ref(false)
 const message = ref('')
 const period = ref<AnalysisPeriod>('DAILY')
 const endDate = ref(new Date().toISOString().slice(0, 10))
-const detailViewer = ref<AnalysisSummary | null>(null)
-
-function parseConclusions(resultText: string): Conclusion[] {
-  try {
-    const parsed = JSON.parse(resultText) as { conclusions?: Conclusion[] }
-    if (Array.isArray(parsed.conclusions)) return parsed.conclusions
-  } catch { /* 兼容旧版非结构化结果 */ }
-  return [{ title: '分析结论', summary: resultText || '本次未生成可展示的结论。', evidence: [], recommendation: '请结合日报原始记录进一步核实。' }]
-}
-const summaries = computed<AnalysisSummary[]>(() => results.value.map(result => ({ result, conclusions: parseConclusions(result.resultText) })))
-function conclusionCount(summary: AnalysisSummary) { return summary.conclusions.length }
-function summaryText(summary: AnalysisSummary) { return summary.conclusions[0]?.summary || '本次未发现需要关注的事项。' }
 function runStatus(value: string | null | undefined) {
   const statuses: Record<string, string> = {
     succeeded: '成功', 'partial-failure': '部分失败', failed: '失败', running: '运行中',
@@ -40,7 +26,28 @@ function emailStatus(value: string | null | undefined) {
   }
   return statuses[value?.toLowerCase() || ''] || '未执行'
 }
-async function load() { results.value = (await adminApi.latestAnalysis()).data }
+function reportStatus(run: AnalysisRun) {
+  if (run.reportAvailable) return '已生成'
+  if (run.status?.toLowerCase() === 'running') return '生成中'
+  return '未生成'
+}
+function aiStatus(value: string | null | undefined) {
+  const statuses: Record<string, string> = {
+    succeeded: '已生效', failed: '已降级', skipped: '未调用',
+  }
+  return statuses[value?.toLowerCase() || ''] || '未执行'
+}
+function periodName(value: string | null | undefined) {
+  return value === 'WEEKLY' ? '周报' : value === 'MONTHLY' ? '月报' : '日报'
+}
+function formatRunTime(value: string | null | undefined) {
+  if (!value) return '—'
+  return new Intl.DateTimeFormat('zh-CN', {
+    timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+  }).format(new Date(value)).replace(/\//g, '-')
+}
+async function load() { runs.value = (await adminApi.runs({ size: 20 })).data.items }
 async function runNow() {
   pending.value = true
   try {
@@ -52,7 +59,7 @@ async function runNow() {
   catch (caught) { message.value = apiError(caught).message }
   finally { pending.value = false }
 }
-function viewDetail(summary: AnalysisSummary) { detailViewer.value = summary }
+function downloadReport(run: AnalysisRun) { window.open(`/api/admin/runs/${run.id}/report`, '_blank') }
 onMounted(load)
 </script>
 
@@ -64,8 +71,7 @@ onMounted(load)
       <p v-if="pending" class="feedback" role="status">AI 分析中，预计需要 1～3 分钟，请勿重复提交。</p>
       <p v-if="message" class="feedback" role="status">{{ message }}</p>
     </section>
-    <section v-if="summaries.length" class="analysis-grid" aria-label="分析结论"><article v-for="summary in summaries" :key="summary.result.runId" class="form-card"><span class="eyebrow">分析结论</span><h2>{{ summary.result.analysisDate }}</h2><p>本次共 {{ conclusionCount(summary) }} 条结论</p><h3>{{ summary.conclusions[0]?.title }}</h3><p>{{ summaryText(summary) }}</p><button class="button-secondary" data-testid="view-analysis-detail" type="button" @click="viewDetail(summary)">查看详情</button></article></section>
-    <p v-else class="feedback">暂无分析结论。请选择周期和结束日期后手动运行分析。</p>
-    <div v-if="detailViewer" class="modal-backdrop" @click.self="detailViewer = null"><section class="form-card modal-panel skill-result-modal" role="dialog" aria-modal="true" aria-label="分析详情"><div class="admin-title"><div><span class="eyebrow">分析详情</span><h2>{{ detailViewer.result.analysisDate }} 分析结论</h2></div><button class="button-secondary" type="button" @click="detailViewer = null">关闭</button></div><article v-for="(conclusion, index) in detailViewer.conclusions" :key="index" class="skill-trial"><h3>{{ conclusion.title }}</h3><p>{{ conclusion.summary }}</p><div v-if="conclusion.evidence?.length"><strong>分析依据</strong><ul><li v-for="evidence in conclusion.evidence" :key="evidence">{{ evidence }}</li></ul></div><div><strong>处理建议</strong><p>{{ conclusion.recommendation }}</p></div></article></section></div>
+    <section v-if="runs.length" class="form-card" aria-label="任务记录"><span class="eyebrow">任务记录</span><h2>最近分析任务</h2><div class="admin-table-wrap"><table><thead><tr><th>分析周期</th><th>分析截止日</th><th>运行时间</th><th>报告状态</th><th>AI 分析状态</th><th>AI 降级原因</th><th>邮件状态</th><th>失败原因</th><th>操作</th></tr></thead><tbody><tr v-for="run in runs" :key="run.id"><td>{{ periodName(run.analysisPeriod) }}</td><td>{{ run.analysisDate }}</td><td>{{ formatRunTime(run.startedAt) }}</td><td>{{ reportStatus(run) }}</td><td>{{ aiStatus(run.llmStatus) }}</td><td>{{ run.llmErrorSummary || '—' }}</td><td>{{ emailStatus(run.emailStatus) }}</td><td>{{ run.errorSummary || '—' }}</td><td><button v-if="run.reportAvailable" class="button-secondary" type="button" @click="downloadReport(run)">下载附件</button><span v-else>—</span></td></tr></tbody></table></div></section>
+    <p v-else class="feedback">暂无任务记录。请选择周期和结束日期后手动运行分析。</p>
   </section></AdminLayout>
 </template>

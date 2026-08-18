@@ -68,6 +68,23 @@ class ReportPeriodStatisticsServiceTest extends PostgresIntegrationTest {
     assertThat(result.workdayCount()).isEqualTo(5);
     assertThat(person(result, employeeId).expectedReportCount()).isEqualTo(5);
   }
+
+  @Test
+  void aggregatesAnInclusiveCustomRange() {
+    LocalDate start = LocalDate.of(2026, 8, 3);
+    long employeeId = employee("自选周期员工");
+    workday(start);
+    workday(start.plusDays(1));
+    nonWorkday(start.plusDays(2));
+
+    ReportPeriodStatisticsResponse result = service.statistics(start, start.plusDays(2));
+
+    assertThat(result.period()).isEqualTo("CUSTOM");
+    assertThat(result.periodStart()).isEqualTo(start);
+    assertThat(result.periodEnd()).isEqualTo(start.plusDays(2));
+    assertThat(result.workdayCount()).isEqualTo(2);
+    assertThat(person(result, employeeId).expectedReportCount()).isEqualTo(2);
+  }
   private PersonReportPeriodStatistics person(ReportPeriodStatisticsResponse result, long employeeId) {
     return result.people().stream().filter(item -> item.employeeId() == employeeId).findFirst().orElseThrow();
   }

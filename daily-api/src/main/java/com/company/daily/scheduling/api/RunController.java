@@ -69,6 +69,18 @@ public class RunController {
         .body(runStore.pdf(id));
   }
 
+  @GetMapping("/runs/{id}/report")
+  public ResponseEntity<byte[]> document(@PathVariable long id) {
+    AnalysisRunResponse run = runStore.get(id);
+    MediaType mimeType = run.reportMimeType() == null
+        ? MediaType.APPLICATION_PDF : MediaType.parseMediaType(run.reportMimeType());
+    return ResponseEntity.ok()
+        .header(HttpHeaders.CONTENT_DISPOSITION,
+            ContentDisposition.attachment().filename(run.reportFileName()).build().toString())
+        .contentType(mimeType)
+        .body(runStore.report(id));
+  }
+
   @GetMapping("/analysis/latest")
   public List<DimensionResultResponse> latestAnalysis() { return runStore.latestDimensions(); }
 }

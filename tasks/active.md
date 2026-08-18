@@ -1,24 +1,23 @@
-# Task: 补齐技能运行时迁移
+# Task: push-current-version
 
 ## Goal
 
-为已被错误标记为完成的 V022 脚本型 Skill 运行时 schema 创建可重复执行的补偿迁移。
+将当前已验证的实现提交并推送到 Gitee 的 `codex/daily-analysis-quality` 分支。
 
 ## Acceptance criteria
 
-- [x] `analysis_skill_versions` 存在 `runtime_profile` 与 `manifest_json` 列。
-- [x] `analysis_skill_artifacts` 表及其 trial 索引存在。
-- [x] JDK 21 后端编译成功，运行中后端健康检查为 UP。
+- [x] 除本地 `.tmp/` 诊断文件外的当前实现已暂存。
+- [x] 暂存内容通过 `git diff --cached --check`。
+- [ ] 提交已创建并成功推送到目标 Gitee 分支。
 
 ## Scope exclusions
 
-- 不回滚或篡改既有 Flyway 历史记录。
-- 不删除或修改已有 Skill、试运行或业务数据。
+- 不发布新版本号、创建标签或提交 `.tmp/` 诊断文件。
 
 ## Verification
 
 ```text
-JDK 21: .\mvnw.cmd -B -DskipTests compile
-information_schema 查询补偿列与表；http://localhost:8080/actuator/health
+git diff --cached --check
+git push gitee HEAD:codex/daily-analysis-quality
 ```
 

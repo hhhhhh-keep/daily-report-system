@@ -62,7 +62,7 @@ class AnalysisSourceSnapshotServiceTest {
 
     assertThat(snapshot).contains("\"roster\"").contains("\"reports\"")
         .contains("\"reportDate\":\"2026-07-31\"")
-        .contains("\"coverageStart\":\"2026-07-27\"")
+        .contains("\"coverageStart\":\"2026-07-31\"")
         .contains("\"coverageEnd\":\"2026-07-31\"")
         .contains("\"employee_name\":\"张三\"").contains("\"report_id\":2")
         .contains("\"projectStates\"").contains("\"captured_at\"")
@@ -72,5 +72,27 @@ class AnalysisSourceSnapshotServiceTest {
     assertThat(executedSql).anySatisfy(sql -> assertThat(sql)
         .contains("from employees e").contains("e.active=true or exists")
         .contains("r.report_date between ? and ?"));
+  }
+
+  @Test
+  void fallsBackToWeekdaysWhenConfiguredCalendarHasFewerThanFiveWorkdays() {
+    JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
+    when(jdbcTemplate.queryForList(anyString(), any(Object[].class))).thenAnswer(invocation -> {
+      String sql = invocation.getArgument(0);
+      if (sql.contains("from workday_calendar")) {
+        return List.of(
+            Map.of("calendar_date", LocalDate.of(2026, 1, 4), "workday", true),
+            Map.of("calendar_date", LocalDate.of(2026, 2, 14), "workday", true),
+            Map.of("calendar_date", LocalDate.of(2026, 2, 28), "workday", true),
+            Map.of("calendar_date", LocalDate.of(2026, 5, 9), "workday", true));
+      }
+      return List.of();
+    });
+    AnalysisSourceSnapshotService service = new AnalysisSourceSnapshotService(jdbcTemplate, new ObjectMapper());
+
+    String snapshot = service.build(new AnalysisPeriodWindow(AnalysisPeriod.DAILY,
+        LocalDate.of(2026, 7, 31), LocalDate.of(2026, 7, 31)));
+
+    assertThat(snapshot).contains("\"coverageStart\":\"2026-07-31\"");
   }
 }

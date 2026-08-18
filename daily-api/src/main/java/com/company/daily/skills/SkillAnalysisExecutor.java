@@ -4,6 +4,8 @@ import com.company.daily.analysis.LlmAnalysisAdapter;
 import com.company.daily.analysis.LlmAnalysisResult;
 import com.company.daily.configuration.AnalysisConfiguration;
 import com.company.daily.configuration.AnalysisConfigurationService;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -154,14 +156,13 @@ public class SkillAnalysisExecutor {
         LOGGER.warn("AI analysis repair validation failed; rendering facts-only report", repairException);
         return factsOnly(sourceSnapshot, templatePackage, facts,
             "failed",
-            "AI 语义分析未通过证据校验，已生成基础报告");
+            "AI 语义分析未通过证据校验，已生成基础报告。校验摘要：" + validationSummary(repairException));
       }
     }
     try {
       byte[] analysisBytes = analysisDraft.getBytes(StandardCharsets.UTF_8);
       byte[] document = scriptRuntime.renderDocument(templatePackage, facts, analysisBytes);
-      String preview = "<section class=\"daily-analysis-report\"><h2>日报分析报告</h2>"
-          + "<p>确定性校验通过，Word 报告已生成。</p></section>";
+      String preview = leaderEmailSummary(facts);
       return SkillExecution.succeededDocument(sourceSnapshot, analysisDraft, preview, document);
     } catch (Exception exception) {
       LOGGER.warn("Daily Word report generation failed", exception);
@@ -173,8 +174,7 @@ public class SkillAnalysisExecutor {
       String sourceSnapshot, byte[] templatePackage, byte[] facts, String aiStatus, String warning) {
     try {
       byte[] document = scriptRuntime.renderDocument(templatePackage, facts, null);
-      String preview = "<section class=\"daily-analysis-report\"><h2>日报基础报告</h2><p>" + warning
-          + "。</p></section>";
+      String preview = leaderEmailSummary(facts);
       return SkillExecution.succeededFallback(sourceSnapshot, preview, document, aiStatus, warning);
     } catch (Exception exception) {
       LOGGER.warn("Facts-only daily Word report generation failed", exception);
@@ -441,6 +441,15 @@ public class SkillAnalysisExecutor {
     }
   }
 
+  private static String validationSummary(Exception exception) {
+    String message = exception.getMessage();
+    if (message == null || message.isBlank()) {
+      return exception.getClass().getSimpleName();
+    }
+    String normalized = message.replaceAll("[\\r\\n\\t]+", " ").trim();
+    return normalized.substring(0, Math.min(normalized.length(), 1000));
+  }
+
   private String templateSummary(String sourceSnapshot) {
     try {
       JsonNode root = objectMapper.readTree(sourceSnapshot);
@@ -483,6 +492,59 @@ public class SkillAnalysisExecutor {
 
   private static String stripThinkBlock(String value) {
     return value == null ? "" : value.replaceAll("(?is)<think>.*?</think>", "").trim();
+  }
+
+  private String leaderEmailSummary(byte[] facts) {
+    try {
+      JsonNode attendance = objectMapper.readTree(facts).path("attendance_summary");
+      if (!attendance.isObject()) {
+        return "<section><p>报告已生成，请查收附件。</p></section>";
+      }
+      return "<section class=\"daily-analysis-email-summary\"><h2>填报与出勤摘要</h2>"
+          + summaryLine(1, "应填写人数：" + attendance.path("expected_people").asInt() + "人。")
+          + summaryLine(2, "截至17:30：已填写" + attendance.path("submitted_by_1730_people").asInt()
+              + "人，填写率" + percentage(attendance.path("submitted_by_1730_rate")) + "。")
+          + summaryLine(3, "截至22:00：已填写" + attendance.path("submitted_by_2200_people").asInt()
+              + "人，填写率" + percentage(attendance.path("submitted_by_2200_rate")) + "。")
+          + summaryLine(4, "未填写人员：" + peopleNames(attendance.path("missing_people")) + "。")
+          + summaryLine(5, "全天请假人员：" + peopleNames(attendance.path("full_day_leave_people")) + "。")
+          + summaryLine(6, "半天请假人员：" + peopleNames(attendance.path("half_day_leave_people")) + "。")
+          + summaryLine(7, "待核验人员：" + peopleNames(attendance.path("review_required_people")) + "。")
+          + "</section>";
+    } catch (Exception exception) {
+      LOGGER.warn("Unable to build leader email summary from deterministic facts", exception);
+      return "<section><p>报告已生成，请查收附件。</p></section>";
+    }
+  }
+
+  private static String summaryLine(int number, String text) {
+    return "<p>" + number + ". " + text + "</p>";
+  }
+
+  private static String percentage(JsonNode value) {
+    if (!value.isNumber()) {
+      return "待核验";
+    }
+    return value.decimalValue().multiply(BigDecimal.valueOf(100))
+        .setScale(2, RoundingMode.HALF_UP).toPlainString() + "%";
+  }
+
+  private static String peopleNames(JsonNode people) {
+    if (!people.isArray() || people.isEmpty()) {
+      return "无";
+    }
+    List<String> names = new ArrayList<>();
+    people.forEach(person -> {
+      String name = person.path("name").asText("").trim();
+      if (!name.isBlank()) {
+        names.add(escapeHtml(name));
+      }
+    });
+    return names.isEmpty() ? "无" : String.join("、", names);
+  }
+
+  private static String escapeHtml(String value) {
+    return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
   }
 
   private static String sanitizeHtml(String html) {

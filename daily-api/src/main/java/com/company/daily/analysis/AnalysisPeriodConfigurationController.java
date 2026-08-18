@@ -35,7 +35,9 @@ public class AnalysisPeriodConfigurationController {
       @Valid @RequestBody AnalysisPeriodConfigurationRequest request) throws SchedulerException {
     AnalysisPeriodConfiguration updated = configurationService.update(new AnalysisPeriodConfiguration(
         period, request.enabled(), request.cronExpression(), request.enabledModules(),
-        request.retentionMonths(), request.includeEvidenceInDelivery()));
+        request.retentionMonths(), request.includeEvidenceInDelivery(), request.emailEnabled(),
+        request.emailRecipients(), request.emailCcRecipients(), request.emailSubjectTemplate(),
+        request.reportTitleTemplate()));
     scheduleManager.reschedule();
     return updated;
   }

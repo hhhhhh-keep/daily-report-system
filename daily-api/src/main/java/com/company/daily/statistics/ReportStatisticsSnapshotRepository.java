@@ -10,6 +10,9 @@ public interface ReportStatisticsSnapshotRepository
   Optional<ReportStatisticsSnapshot> findBySnapshotTypeAndSnapshotDate(
       ReportStatisticsSnapshotType snapshotType, LocalDate snapshotDate);
 
+  Optional<ReportStatisticsSnapshot> findTopBySnapshotTypeOrderByCapturedAtDesc(
+      ReportStatisticsSnapshotType snapshotType);
+
   List<ReportStatisticsSnapshot> findAllBySnapshotDateBetweenOrderBySnapshotDateDescCapturedAtDesc(
       LocalDate startDate, LocalDate endDate);
 }

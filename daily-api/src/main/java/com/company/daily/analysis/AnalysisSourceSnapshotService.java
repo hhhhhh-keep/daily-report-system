@@ -1,8 +1,6 @@
 package com.company.daily.analysis;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,8 +25,7 @@ public class AnalysisSourceSnapshotService {
               + "where calendar_date<=? and active=true order by calendar_date",
           window.endDate());
       LocalDate reportDate = window.endDate();
-      LocalDate coverageStart = window.period() == AnalysisPeriod.DAILY
-          ? dailyCoverageStart(workdays, reportDate) : window.startDate();
+      LocalDate coverageStart = window.period() == AnalysisPeriod.DAILY ? reportDate : window.startDate();
       LocalDate coverageEnd = window.endDate();
       Map<String, Object> snapshot = new LinkedHashMap<>();
       snapshot.put("period", window.period().name());
@@ -70,34 +67,6 @@ public class AnalysisSourceSnapshotService {
     } catch (Exception exception) {
       throw new IllegalStateException("Unable to build analysis source snapshot", exception);
     }
-  }
-
-  private static LocalDate dailyCoverageStart(List<Map<String, Object>> workdays, LocalDate reportDate) {
-    List<LocalDate> configured = new ArrayList<>();
-    for (Map<String, Object> row : workdays) {
-      if (!Boolean.TRUE.equals(row.get("workday"))) {
-        continue;
-      }
-      LocalDate date = asLocalDate(row.get("calendar_date"));
-      if (date != null && !date.isAfter(reportDate)) {
-        configured.add(date);
-      }
-    }
-    configured.sort(Comparator.naturalOrder());
-    if (!configured.isEmpty()) {
-      return configured.get(Math.max(0, configured.size() - 5));
-    }
-    LocalDate cursor = reportDate;
-    int workdayCount = 0;
-    while (workdayCount < 5) {
-      if (cursor.getDayOfWeek().getValue() <= 5) {
-        workdayCount++;
-      }
-      if (workdayCount < 5) {
-        cursor = cursor.minusDays(1);
-      }
-    }
-    return cursor;
   }
 
   private static LocalDate asLocalDate(Object value) {

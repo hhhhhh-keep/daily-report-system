@@ -1,7 +1,8 @@
-# Progress — 补齐技能运行时迁移
+# Progress — push-current-version
 
-Run: 20260817-114654
-Status: completed
+Run: 20260818-101434
+Status: ready for commit
 
-V024 已在 `daily_report_dev` 应用；information_schema 验证两个运行时列、制品表和 trial 索引均存在。JDK 21 编译成功，API 健康状态为 UP。
+- 已暂存 88 个实现、测试、迁移和文档文件；`.tmp/` 下的本地诊断文件未暂存。
+- `git diff --cached --check` 通过。
 

@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 class EmailServiceTest {
@@ -30,7 +31,10 @@ class EmailServiceTest {
             new byte[] {1}, "r.pdf"));
 
     assertThat(result.status()).isEqualTo("sent");
-    verify(gateway).send(any(EmailMessage.class), any(SmtpSettings.class));
+    ArgumentCaptor<EmailMessage> messageCaptor = ArgumentCaptor.forClass(EmailMessage.class);
+    verify(gateway).send(messageCaptor.capture(), any(SmtpSettings.class));
+    assertThat(messageCaptor.getValue().attachment()).containsExactly((byte) 1);
+    assertThat(messageCaptor.getValue().attachmentMimeType()).isEqualTo(ReportArtifact.PDF_MIME_TYPE);
   }
 
   private AnalysisConfiguration configuration() {

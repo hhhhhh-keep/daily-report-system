@@ -21,19 +21,28 @@ public class ReportService {
       ReportMetrics metrics,
       List<RuleConclusion> rules,
       String advisory) {
+    return generate(configuration, metrics, rules, advisory, "日报分析报告");
+  }
+
+  public ReportArtifact generate(
+      AnalysisConfiguration configuration,
+      ReportMetrics metrics,
+      List<RuleConclusion> rules,
+      String advisory,
+      String reportTitle) {
     String ruleHtml = rules.stream().map(rule -> "<li>" + escape(rule.message()) + "</li>")
         .collect(Collectors.joining());
-    String content = "<section><h2>客观指标</h2><p>已提交 " + metrics.submittedReportCount()
+    String content = "<section><h1>" + escape(reportTitle) + "</h1><h2>客观指标</h2><p>已提交 " + metrics.submittedReportCount()
         + " 人，任务 " + metrics.taskCount() + " 项，项目 " + metrics.projectCount()
         + " 个，风险/阻塞 " + metrics.abnormalTaskCount() + " 项。</p><h2>规则结论</h2><ul>"
         + ruleHtml + "</ul><h2>AI 顾问建议</h2><pre>" + escape(advisory) + "</pre></section>";
     String html = configuration.reportTemplate().replace("{{date}}", metrics.date().toString())
         .replace("{{content}}", content);
     String fileName = "daily-analysis-" + metrics.date() + ".pdf";
-    return new ReportArtifact(html, pdf(metrics, rules), fileName);
+    return new ReportArtifact(html, pdf(metrics, rules, reportTitle), fileName);
   }
 
-  private byte[] pdf(ReportMetrics metrics, List<RuleConclusion> rules) {
+  private byte[] pdf(ReportMetrics metrics, List<RuleConclusion> rules, String reportTitle) {
     try (PDDocument document = new PDDocument(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
       PDPage page = new PDPage();
       document.addPage(page);
@@ -41,7 +50,7 @@ public class ReportService {
         stream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 18);
         stream.beginText();
         stream.newLineAtOffset(52, 740);
-        stream.showText("Daily Analysis Report " + metrics.date());
+        stream.showText(reportTitle.replaceAll("[^\\x20-\\x7E]", "") + " " + metrics.date());
         stream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 11);
         stream.newLineAtOffset(0, -30);
         stream.showText("Employees: " + metrics.submittedReportCount() + "/"

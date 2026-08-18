@@ -70,6 +70,12 @@ class SkillAnalysisExecutorTest {
     assertThat(result.aiStatus()).isEqualTo("succeeded");
     assertThat(result.analysisDraft()).contains("work_summary");
     assertThat(result.renderedDocument()).containsExactly("docx".getBytes(StandardCharsets.UTF_8));
+    assertThat(result.renderedHtml())
+        .contains("应填写人数：3人。")
+        .contains("截至17:30：已填写1人，填写率33.33%。")
+        .contains("截至22:00：已填写2人，填写率66.67%。")
+        .contains("未填写人员：未填人员。")
+        .doesNotContain("确定性校验通过", "Word 报告已生成");
   }
 
   @Test
@@ -546,7 +552,14 @@ class SkillAnalysisExecutorTest {
   private static final class StubScriptRuntime implements SkillScriptRuntime {
     @Override
     public byte[] prepareFacts(byte[] skillPackage, byte[] dataPackage, String reportDate) {
-      return "{\"evidence\":[{\"evidence_id\":\"evidence-1\"}]}".getBytes(StandardCharsets.UTF_8);
+      return ("{\"evidence\":[{\"evidence_id\":\"evidence-1\"}],"
+          + "\"attendance_summary\":{\"expected_people\":3,"
+          + "\"submitted_by_1730_people\":1,\"submitted_by_1730_rate\":0.3333,"
+          + "\"submitted_by_2200_people\":2,\"submitted_by_2200_rate\":0.6667,"
+          + "\"missing_people\":[{\"name\":\"未填人员\"}],"
+          + "\"full_day_leave_people\":[],\"half_day_leave_people\":[],"
+          + "\"review_required_people\":[]}}")
+          .getBytes(StandardCharsets.UTF_8);
     }
 
     @Override

@@ -51,16 +51,19 @@ public class AnalysisRunStore {
       String rulesJson,
       String advisory,
       String llmStatus,
+      String llmErrorSummary,
       String html,
-      byte[] pdf,
+      byte[] reportContent,
       String fileName,
+      String mimeType,
       String emailStatus,
       String errorSummary) {
     jdbcTemplate.update("update analysis_runs set status=?,finished_at=current_timestamp,"
-        + "analyzed_employee_count=?,metrics_json=?,rules_json=?,advisory_text=?,llm_status=?,"
-        + "report_html=?,report_pdf=?,report_file_name=?,email_status=?,error_summary=?,"
+        + "analyzed_employee_count=?,metrics_json=?,rules_json=?,advisory_text=?,llm_status=?,llm_error_summary=?,"
+        + "report_html=?,report_pdf=?,report_file_name=?,report_mime_type=?,email_status=?,error_summary=?,"
         + "updated_at=current_timestamp where id=?", status, employeeCount, metricsJson, rulesJson,
-        advisory, llmStatus, html, pdf, fileName, emailStatus, errorSummary, id);
+        advisory, llmStatus, llmErrorSummary, html, reportContent, fileName, mimeType, emailStatus,
+        errorSummary, id);
   }
 
   public void fail(long id, String error) {
@@ -115,6 +118,15 @@ public class AnalysisRunStore {
     return value;
   }
 
+  public byte[] report(long id) {
+    byte[] value = jdbcTemplate.query("select report_pdf from analysis_runs where id=?",
+        rs -> rs.next() ? rs.getBytes(1) : null, id);
+    if (value == null) {
+      throw new ResourceNotFoundException("该运行没有报告附件");
+    }
+    return value;
+  }
+
   public List<String> taskTexts(LocalDate date) {
     return jdbcTemplate.query("select e.name || ' / ' || p.name || ': ' || t.progress_result "
         + "from daily_tasks t join daily_reports r on r.id=t.report_id "
@@ -153,7 +165,9 @@ public class AnalysisRunStore {
         rs.getTimestamp("started_at").toInstant(), finished,
         rs.getInt("analyzed_employee_count"), rs.getString("metrics_json"),
         rs.getString("rules_json"), rs.getString("advisory_text"), rs.getString("llm_status"),
+        rs.getString("llm_error_summary"),
         rs.getBytes("report_pdf") != null, rs.getString("report_file_name"),
+        rs.getString("report_mime_type"),
         rs.getString("email_status"), rs.getString("error_summary"), retryOf,
         rs.getInt("retry_count"));
   }

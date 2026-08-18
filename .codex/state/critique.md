@@ -1,7 +1,8 @@
-# Critique — 补齐技能运行时迁移
+# Critique — push-current-version
 
-Run: 20260817-114654
-Status: PASS
+Run: 20260818-101434
+Status: ready for push review
 
-V024 仅使用 `if not exists` 新增缺失 schema，不修改已有 Skill 或试运行数据；数据库校验显示迁移版本为 024。
+- 暂存范围不包含 `.tmp/` 临时诊断数据。
+- 尚待确认远程分支可访问并完成推送。
 

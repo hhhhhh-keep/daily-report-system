@@ -110,7 +110,9 @@ public class ProcessPythonSkillRuntime implements SkillScriptRuntime {
     command.add(executable);
     command.add(root.resolve(entrypoint).toString());
     command.addAll(arguments);
-    ProcessBuilder builder = new ProcessBuilder(command).directory(root.toFile()).redirectErrorStream(true);
+    Path outputLog = root.resolve("work/script-output.log");
+    ProcessBuilder builder = new ProcessBuilder(command).directory(root.toFile())
+        .redirectErrorStream(true).redirectOutput(outputLog.toFile());
     Map<String, String> environment = builder.environment();
     environment.clear();
     String systemPath = System.getenv("PATH");
@@ -131,7 +133,10 @@ public class ProcessPythonSkillRuntime implements SkillScriptRuntime {
       process.destroyForcibly();
       throw new IllegalStateException("Scripted Skill execution timed out");
     }
-    String output = new String(process.getInputStream().readNBytes(64 * 1024), StandardCharsets.UTF_8);
+    String output;
+    try (var input = Files.newInputStream(outputLog)) {
+      output = new String(input.readNBytes(64 * 1024), StandardCharsets.UTF_8);
+    }
     if (process.exitValue() != 0) {
       throw new SkillScriptException(failureCode, output.isBlank() ? "Scripted Skill failed" : output.trim());
     }

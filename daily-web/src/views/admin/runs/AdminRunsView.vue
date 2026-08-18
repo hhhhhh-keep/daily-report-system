@@ -36,7 +36,7 @@ onMounted(load)
   <div class="admin-table-wrap"><table><thead><tr><th>日期</th><th>触发</th><th>状态</th><th>人数</th><th>LLM</th><th>邮件</th><th>错误</th><th>操作</th></tr></thead>
     <tbody><tr v-for="run in runs" :key="run.id"><td>{{ run.analysisDate }}<small>#{{ run.id }}</small></td><td>{{ run.triggerType }}</td><td>{{ run.status }}</td>
       <td>{{ run.analyzedEmployeeCount }}</td><td>{{ run.llmStatus }}</td><td>{{ run.emailStatus }}</td><td>{{ run.errorSummary || '—' }}</td><td class="table-actions">
-        <a v-if="run.reportAvailable" :href="`/api/admin/runs/${run.id}/report.pdf`">PDF</a>
+        <a v-if="run.reportAvailable" :href="`/api/admin/runs/${run.id}/report`">{{ run.reportFileName || '下载报告附件' }}</a>
         <button v-if="['failed','partial-failure'].includes(run.status)" type="button" @click="retry(run.id)">重新执行</button>
       </td></tr></tbody></table></div>
   <Pagination v-model:page="page" v-model:page-size="pageSize"
