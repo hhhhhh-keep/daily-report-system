@@ -60,10 +60,10 @@ export const WORK_STAGE_LABELS: Record<string, string> = {
   'delivery-implementation': '售中·实施',
   'delivery-testing-deployment': '售中·测试部署',
   'delivery-training-acceptance': '售中·培训验收',
-  'after-sales-operations-support': '售后·运维',
-  'after-sales-incident-handling': '售后·故障处理',
-  'after-sales-optimization-upgrade': '售后·优化升级',
-  'after-sales-customer-support': '售后·客户支撑',
+  'after-sales-operations-support': '售中/交付·运维',
+  'after-sales-incident-handling': '售中/交付·故障处理',
+  'after-sales-optimization-upgrade': '售中/交付·优化升级',
+  'after-sales-customer-support': '售中/交付·客户支撑',
 }
 
 export const RISK_TYPE_LABELS: Record<string, string> = {

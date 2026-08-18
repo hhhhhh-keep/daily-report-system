@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios'
+import { notify } from '@/utils/toast'
 
 export interface ApiErrorPayload {
   code: string
@@ -14,6 +15,17 @@ export const http = axios.create({
   withCredentials: true,
   headers: { Accept: 'application/json' },
 })
+
+http.interceptors.response.use(
+  (response) => {
+    if (['post', 'put', 'patch', 'delete'].includes(response.config.method?.toLowerCase() ?? '')) notify('操作已完成')
+    return response
+  },
+  (error) => {
+    notify(apiError(error).message, 'error')
+    return Promise.reject(error)
+  },
+)
 
 export function apiError(error: unknown): ApiErrorPayload {
   if (error instanceof AxiosError && error.response?.data) {

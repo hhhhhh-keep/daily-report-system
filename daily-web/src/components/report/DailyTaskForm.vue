@@ -18,8 +18,7 @@ const needsIssueDetails = computed(() => task.value.currentStatus === 'blocked')
 const projectSearch = ref('')
 const stageGroups = computed(() => [
   { label: '售前', codes: ['presales-requirements-analysis', 'presales-solution-design', 'presales-bid-quotation', 'presales-technical-presentation'] },
-  { label: '售中/交付', codes: ['delivery-implementation', 'delivery-testing-deployment', 'delivery-training-acceptance'] },
-  { label: '售后', codes: ['after-sales-operations-support', 'after-sales-incident-handling', 'after-sales-optimization-upgrade', 'after-sales-customer-support'] },
+  { label: '售中/交付', codes: ['delivery-implementation', 'delivery-testing-deployment', 'delivery-training-acceptance', 'after-sales-operations-support', 'after-sales-incident-handling', 'after-sales-optimization-upgrade', 'after-sales-customer-support'] },
 ].map((group) => ({ ...group, options: (props.dictionaries.work_stage ?? []).filter((item) => group.codes.includes(item.code)) })))
 const stageCategory = ref('')
 const visibleStages = computed(() => stageGroups.value.find((group) => group.label === stageCategory.value)?.options ?? [])
@@ -56,7 +55,7 @@ watch(choices, () => { projectSearch.value = choices.value.find((item) => item.i
       <label v-if="!isSpecialWork">阶段分类<select v-model="stageCategory" required @change="onStageCategoryChanged"><option value="" disabled>请选择阶段分类</option><option v-for="group in stageGroups" :key="group.label" :value="group.label">{{ group.label }}</option></select></label>
       <label v-if="!isSpecialWork">工作阶段<select v-model="task.workStage" required :disabled="!stageCategory"><option value="" disabled>请选择工作阶段</option><option v-for="item in visibleStages" :key="item.id" :value="item.code">{{ item.label }}</option></select></label>
       <label>参与角色<select v-model="task.participationRole" required><option v-for="item in dictionaries.participation_role ?? []" :key="item.id" :value="item.code">{{ item.label }}</option></select></label>
-      <label class="field-wide">工作内容与进展<textarea v-model.trim="task.progressResult" required maxlength="4000" rows="4" placeholder="请写清具体工作内容、已完成产物和下一步计划。" /></label>
+      <label class="field-wide">工作内容与产出<textarea v-model.trim="task.progressResult" required maxlength="4000" rows="4" placeholder="请写清具体工作内容和已完成产物。" /></label>
       <label>当前状态<select v-model="task.currentStatus" required><option v-for="item in dictionaries.current_status ?? []" :key="item.id" :value="item.code">{{ item.label }}</option></select></label>
     </div>
     <div v-if="needsIssueDetails" class="issue-fields" data-testid="issue-fields">

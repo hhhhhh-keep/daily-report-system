@@ -12,9 +12,9 @@ a { color: #155eef; }
 .page-shell { width: min(100% - 32px, 1120px); margin: 0 auto; padding: 48px 0 96px; }
 .eyebrow { display: block; color: #667085; font-size: 0.7rem; letter-spacing: 0.14em; }
 .employee-header { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 20px max(20px, calc((100vw - 1120px) / 2)); background: #fff; border-bottom: 1px solid #e4e7ec; }
-.employee-header nav { display: flex; gap: 16px; }
-.employee-header a { color: #475467; text-decoration: none; font-weight: 600; }
-.employee-header a.router-link-active { color: #155eef; }
+.employee-header nav { display: flex; gap: 10px; }
+.employee-header a { padding: 10px 14px; border: 1px solid #b2ccff; border-radius: 10px; color: #155eef; background: #f5f8ff; text-decoration: none; font-weight: 700; }
+.employee-header a.router-link-active { color: #fff; background: #155eef; border-color: #155eef; box-shadow: 0 2px 5px rgb(21 94 239 / 22%); }
 .report-page { max-width: 820px; }
 .page-intro { padding: 30px 0 26px; }
 .page-intro.compact { padding-top: 10px; }
@@ -27,6 +27,10 @@ a { color: #155eef; }
 .section-heading h2 { margin: 4px 0 0; font-size: 1.2rem; }
 .step-label { color: #155eef; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; }
 .date-badge, .task-count { padding: 7px 11px; border-radius: 999px; color: #344054; background: #f2f4f7; font-size: 0.8rem; white-space: nowrap; }
+.report-context { display: flex; flex-wrap: wrap; gap: 8px; margin: -4px 0 20px; }
+.report-context span { padding: 6px 9px; border-radius: 999px; color: #475467; background: #f8fafc; font-size: 0.78rem; }
+.report-context span.saved { color: #067647; background: #ecfdf3; }
+.report-context span.saving { color: #175cd3; background: #eff8ff; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 label { display: grid; gap: 8px; color: #344054; font-size: 0.88rem; font-weight: 600; }
 input, select, textarea { width: 100%; border: 1px solid #d0d5dd; border-radius: 10px; padding: 11px 12px; color: #101828; background: #fff; font: inherit; font-weight: 400; }
@@ -51,7 +55,17 @@ button:disabled { cursor: wait; opacity: 0.6; }
 .feedback.error { color: #b42318; background: #fef3f2; }
 .feedback.success { color: #067647; background: #ecfdf3; }
 .submit-bar { position: sticky; bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 14px 16px; border: 1px solid #e4e7ec; border-radius: 14px; background: rgb(255 255 255 / 94%); box-shadow: 0 14px 38px rgb(16 24 40 / 16%); backdrop-filter: blur(12px); }
+.submit-copy { display: grid; gap: 4px; }
 .submit-bar span { color: #667085; font-size: 0.82rem; }
+.submit-copy strong { color: #175cd3; font-size: 0.82rem; }
+.submit-copy strong.saved { color: #067647; }
+.submit-copy strong.saving { color: #175cd3; }
+.submit-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.toast-stack { position: fixed; z-index: 100; top: 18px; right: 18px; display: grid; width: min(360px, calc(100vw - 36px)); gap: 10px; }
+.toast { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding: 13px 14px; border: 1px solid #abefc6; border-radius: 12px; color: #067647; background: #ecfdf3; box-shadow: 0 12px 28px rgb(16 24 40 / 18%); }
+.toast.error { border-color: #fecdca; color: #b42318; background: #fef3f2; }
+.toast span { color: inherit; font-size: .86rem; }
+.toast button { padding: 0 3px; color: inherit; background: transparent; font-size: 1.25rem; line-height: 1; }
 .lookup-card { display: flex; align-items: end; gap: 14px; margin-bottom: 22px; }
 .lookup-card label { flex: 1; }
 .admin-layout { min-height: 100vh; display: grid; grid-template-columns: 240px 1fr; }
@@ -153,7 +167,8 @@ td small { display: block; margin-top: 3px; color: #667085; }
 .table-actions a { padding: 7px 10px; border-radius: 10px; color: #155eef; background: #f5f8ff; text-decoration: none; }
 @media (max-width: 720px) {
   .employee-header { align-items: flex-start; flex-direction: column; }
-  .employee-header nav { width: 100%; justify-content: space-between; }
+  .employee-header nav { width: 100%; }
+  .employee-header nav a { flex: 1; text-align: center; }
   .page-shell { width: min(100% - 24px, 1120px); padding-top: 22px; }
   .form-card, .task-card, .lookup-card { padding: 18px; border-radius: 14px; }
   .workday-calendar-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -161,7 +176,9 @@ td small { display: block; margin-top: 3px; color: #667085; }
   .field-wide { grid-column: auto; }
   .lookup-card { align-items: stretch; flex-direction: column; }
   .submit-bar { align-items: stretch; flex-direction: column; }
-  .submit-bar .button-primary { width: 100%; }
+  .submit-actions, .submit-bar .button-primary { width: 100%; }
+  .submit-actions button { flex: 1; }
+  .toast-stack { top: 12px; right: 12px; width: calc(100vw - 24px); }
   .admin-layout { grid-template-columns: 1fr; }
   .admin-sidebar nav { grid-template-columns: repeat(2, 1fr); }
   .admin-content { padding: 22px 12px 60px; }

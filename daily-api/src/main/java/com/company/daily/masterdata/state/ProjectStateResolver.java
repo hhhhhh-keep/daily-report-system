@@ -9,9 +9,8 @@ public class ProjectStateResolver {
       "presales-technical-presentation");
   private static final Set<String> DELIVERY = Set.of(
       "implementation", "testing-deployment", "training-acceptance",
-      "delivery-implementation", "delivery-testing-deployment", "delivery-training-acceptance");
-  private static final Set<String> AFTERSALES = Set.of(
       "operations-support", "incident-handling", "optimization-upgrade", "customer-support",
+      "delivery-implementation", "delivery-testing-deployment", "delivery-training-acceptance",
       "after-sales-operations-support", "after-sales-incident-handling",
       "after-sales-optimization-upgrade", "after-sales-customer-support");
 
@@ -33,9 +32,6 @@ public class ProjectStateResolver {
     }
     if (DELIVERY.contains(fact.workStage())) {
       return ProjectDerivedStateValue.DELIVERY_IN_PROGRESS;
-    }
-    if (AFTERSALES.contains(fact.workStage())) {
-      return ProjectDerivedStateValue.AFTERSALES_IN_PROGRESS;
     }
     return ProjectDerivedStateValue.IN_PROGRESS;
   }

@@ -20,7 +20,7 @@ onMounted(async () => {
         <p>每项工作单独记录，项目进展、风险和协同需求一目了然。</p>
       </div>
       <p v-if="store.loading" class="feedback">正在加载日报选项…</p>
-      <ReportForm v-else-if="store.options" submit-label="提交今日日报" />
+      <ReportForm v-else-if="store.options" submit-label="提交今日日报" enable-draft />
       <p v-else class="feedback error" role="alert">{{ store.error }}</p>
     </section>
   </EmployeeLayout>

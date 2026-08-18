@@ -53,7 +53,7 @@ public class AnalysisSourceSnapshotService {
           + "s.project_id,s.project_name,s.state,s.lifecycle,s.current_stage,s.state_started_date,"
           + "s.owner_name,s.participant_count,s.blocked_task_count,s.latest_report_date,"
           + "p.formal,p.active,p.status,p.priority from project_state_snapshots s "
-          + "join projects p on p.id=s.project_id where s.snapshot_date=? order by s.project_id",
+          + "join projects p on p.id=s.project_id where s.snapshot_date=? and p.active=true order by s.project_id",
           window.endDate()));
       snapshot.put("tasks", jdbcTemplate.queryForList("select t.id as task_id,t.report_id,r.report_date,"
           + "e.id as employee_id,e.name as employee_name,e.team_name,r.attendance_status,"
@@ -61,7 +61,7 @@ public class AnalysisSourceSnapshotService {
           + "t.participation_role,t.progress_result,t.current_status,t.issue_type,"
           + "t.collaboration_role,t.collaboration_requirement from daily_tasks t "
           + "join daily_reports r on r.id=t.report_id join employees e on e.id=r.employee_id "
-          + "join projects p on p.id=t.project_id where r.report_date between ? and ? "
+          + "join projects p on p.id=t.project_id where r.report_date between ? and ? and p.active=true "
           + "order by r.report_date,t.id", coverageStart, coverageEnd));
       return objectMapper.writeValueAsString(snapshot);
     } catch (Exception exception) {

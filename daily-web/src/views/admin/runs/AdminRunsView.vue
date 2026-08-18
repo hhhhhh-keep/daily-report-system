@@ -12,6 +12,17 @@ const page = ref(0)
 const pageSize = ref(20)
 const loading = ref(false)
 const message = ref('')
+const triggerLabels: Record<string, string> = { manual: '手动执行', scheduled: '计划执行', retry: '重新执行' }
+const runStatusLabels: Record<string, string> = {
+  succeeded: '成功', 'partial-failure': '部分失败', failed: '失败', running: '运行中',
+}
+const llmStatusLabels: Record<string, string> = { succeeded: '成功', failed: '失败', skipped: '未执行' }
+const emailStatusLabels: Record<string, string> = {
+  sent: '已发送', failed: '发送失败', 'not-requested': '未启用', skipped: '未发送',
+}
+function label(value: string | null | undefined, labels: Record<string, string>, fallback = '未执行') {
+  return labels[value?.toLowerCase() || ''] || fallback
+}
 async function load() {
   loading.value = true
   try {
@@ -24,7 +35,7 @@ async function load() {
   }
 }
 async function retry(id: number) {
-  try { const run = (await adminApi.retryRun(id)).data; message.value = `重试运行 #${run.id}：${run.status}`; await load() }
+  try { const run = (await adminApi.retryRun(id)).data; message.value = `已重新执行 #${run.id}：${label(run.status, runStatusLabels, '未知')}`; await load() }
   catch (caught) { message.value = apiError(caught).message }
 }
 onMounted(load)
@@ -34,8 +45,8 @@ onMounted(load)
   <div class="admin-title"><div><span class="eyebrow">TASK RUNS</span><h1>分析任务记录</h1></div><button type="button" @click="load">刷新</button></div>
   <p v-if="message" class="feedback" role="status">{{ message }}</p>
   <div class="admin-table-wrap"><table><thead><tr><th>日期</th><th>触发</th><th>状态</th><th>人数</th><th>LLM</th><th>邮件</th><th>错误</th><th>操作</th></tr></thead>
-    <tbody><tr v-for="run in runs" :key="run.id"><td>{{ run.analysisDate }}<small>#{{ run.id }}</small></td><td>{{ run.triggerType }}</td><td>{{ run.status }}</td>
-      <td>{{ run.analyzedEmployeeCount }}</td><td>{{ run.llmStatus }}</td><td>{{ run.emailStatus }}</td><td>{{ run.errorSummary || '—' }}</td><td class="table-actions">
+    <tbody><tr v-for="run in runs" :key="run.id"><td>{{ run.analysisDate }}<small>#{{ run.id }}</small></td><td>{{ label(run.triggerType, triggerLabels, '其他触发') }}</td><td>{{ label(run.status, runStatusLabels, '未知') }}</td>
+      <td>{{ run.analyzedEmployeeCount }}</td><td>{{ label(run.llmStatus, llmStatusLabels) }}</td><td>{{ label(run.emailStatus, emailStatusLabels) }}</td><td>{{ run.errorSummary || '—' }}</td><td class="table-actions">
         <a v-if="run.reportAvailable" :href="`/api/admin/runs/${run.id}/report`">{{ run.reportFileName || '下载报告附件' }}</a>
         <button v-if="['failed','partial-failure'].includes(run.status)" type="button" @click="retry(run.id)">重新执行</button>
       </td></tr></tbody></table></div>

@@ -23,6 +23,14 @@ spring:
   quartz:
     auto-startup: false
 
+# Scripted Skills require Python 3.12 and python-docx. Replace the path with
+# the local Python 3.12 executable before enabling analysis runs.
+skills:
+  scripted:
+    enabled: true
+  python:
+    executable: C:/Path/to/Python312/python.exe
+
 daily:
   # Vite dev server URL (the page that loads the JS frontend).
   web-base-url: http://localhost:5180

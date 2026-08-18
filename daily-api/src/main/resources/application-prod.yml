@@ -1,0 +1,23 @@
+# 正式环境：凭据必须从部署环境变量注入，禁止提交到仓库。
+spring:
+  config:
+    activate:
+      on-profile: prod
+  quartz:
+    auto-startup: true
+
+server:
+  servlet:
+    session:
+      cookie:
+        secure: true
+        same-site: strict
+
+logging:
+  level:
+    com.company.daily: info
+
+management:
+  endpoint:
+    health:
+      show-details: never

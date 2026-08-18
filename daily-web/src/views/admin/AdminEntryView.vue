@@ -9,6 +9,7 @@ const route = useRoute()
 const router = useRouter()
 const username = ref('admin')
 const password = ref('')
+const rememberMe = ref(false)
 const error = ref('')
 const pending = ref(false)
 
@@ -16,7 +17,7 @@ async function login() {
   pending.value = true
   error.value = ''
   try {
-    await adminApi.login(username.value, password.value)
+    await adminApi.login(username.value, password.value, rememberMe.value)
     setAdminSessionMarker(true)
     const redirect = typeof route.query.redirect === 'string'
       ? route.query.redirect : '/admin/dashboard'
@@ -37,6 +38,7 @@ async function login() {
       <p>使用唯一管理员账号维护基础数据、查看日报和驾驶舱。</p>
       <label>用户名<input v-model.trim="username" autocomplete="username" required /></label>
       <label>密码<input v-model="password" type="password" autocomplete="current-password" required /></label>
+      <label class="check-field"><input v-model="rememberMe" type="checkbox" />记住我（30 天）</label>
       <p v-if="error" class="feedback error" role="alert">{{ error }}</p>
       <button class="button-primary" :disabled="pending" type="submit">
         {{ pending ? '正在登录…' : '登录管理后台' }}

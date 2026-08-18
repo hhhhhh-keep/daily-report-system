@@ -3,6 +3,7 @@
 **/target/
 **/.m2/
 **/.env
+docker/.env.prod
 **/application-local.yml
 **/.idea/
 **/.vscode/

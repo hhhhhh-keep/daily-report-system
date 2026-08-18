@@ -62,7 +62,15 @@ async function save() {
     message.value = '项目资料已保存'; reset(); await load()
   } catch (caught) { message.value = apiError(caught).message }
 }
-async function deactivate(id: number) { await adminApi.deleteProject(id); await load() }
+async function deactivate(row: ProjectRecord) {
+  const confirmed = window.confirm(`确定停用“${row.name}”吗？\n\n停用后：不能再填写该项目；后续新生成的分析报告不会包含该项目。\n既有日报记录和已生成报告将保留。`)
+  if (!confirmed) return
+  try {
+    await adminApi.deleteProject(row.id)
+    message.value = `已停用“${row.name}”：后续填报和新分析报告不再包含该项目；历史记录保留。`
+    await load()
+  } catch (caught) { message.value = apiError(caught).message }
+}
 const stageLabels: Record<string, string> = {
   'requirements-analysis': '需求调研与分析', 'solution-design': '方案编写/设计',
   'bid-quotation': '投标/报价支持', 'technical-presentation': '技术交流/演示汇报',
@@ -72,11 +80,13 @@ const stageLabels: Record<string, string> = {
   'customer-support': '客户持续支撑',
 }
 const statusLabels: Record<string, string> = {
-  started: '已启动', 'in-progress': '进行中', completed: '已完成', blocked: '遇到阻碍', paused: '暂停/搁置',
+  active: '正常', started: '已启动', 'in-progress': '进行中', completed: '已完成', blocked: '遇到阻碍', paused: '暂停/搁置',
 }
+const priorityOptions = [['low', '低'], ['medium', '中'], ['high', '高'], ['urgent', '紧急']]
+const projectStatusOptions = [['active', '正常'], ['started', '已启动'], ['in-progress', '进行中'], ['completed', '已完成'], ['blocked', '遇到阻碍'], ['paused', '暂停/搁置']]
 const derivedStateLabels: Record<string, string> = {
   NOT_STARTED: '未启动', PRESALES_IN_PROGRESS: '售前推进', DELIVERY_IN_PROGRESS: '交付推进',
-  AFTERSALES_IN_PROGRESS: '售后支撑', IN_PROGRESS: '进行中', BLOCKED: '存在阻碍',
+  AFTERSALES_IN_PROGRESS: '售中/交付推进', IN_PROGRESS: '进行中', BLOCKED: '存在阻碍',
   PAUSED: '暂停', COMPLETED: '已完成',
 }
 const activityTimeline = computed(() => activity.value?.tasks.slice().sort((left, right) =>
@@ -125,7 +135,8 @@ onMounted(load)
       <label>名称<input v-model.trim="form.name" required /></label><label>项目编号<input v-model.trim="form.code" /></label>
       <label>客户<input v-model.trim="form.customerName" /></label><label>行业<input v-model.trim="form.industry" /></label>
       <label>项目阶段<input v-model.trim="form.projectStage" /></label><label>负责人<input v-model.trim="form.ownerName" /></label>
-      <label>优先级<input v-model.trim="form.priority" /></label><label>状态<input v-model.trim="form.status" required /></label>
+      <label>优先级<select v-model="form.priority"><option value="">未设置</option><option v-for="[value, text] in priorityOptions" :key="value" :value="value">{{ text }}</option></select></label>
+      <label>状态<select v-model="form.status" required><option v-for="[value, text] in projectStatusOptions" :key="value" :value="value">{{ text }}</option></select></label>
       <label class="check-field"><input v-model="form.formal" type="checkbox" /> 正式项目</label>
       <label v-if="!form.formal">系统标识<input v-model.trim="form.systemKey" required /></label>
       <label class="check-field"><input v-model="form.active" type="checkbox" /> 启用</label>
@@ -138,7 +149,7 @@ onMounted(load)
       <tbody><tr v-for="row in filteredRows" :key="row.id"><td>{{ row.name }}</td><td>{{ row.formal ? '正式项目' : '非正式专项' }}</td>
         <td>{{ row.code || row.systemKey }}</td><td>{{ row.active ? '启用' : '停用' }}</td><td class="table-actions"><button type="button" @click="edit(row)">编辑</button>
           <button class="activity-button" type="button" @click="showActivity(row)">日报动态</button>
-          <button v-if="row.active" type="button" @click="deactivate(row.id)">停用</button></td></tr></tbody></table></div>
+          <button v-if="row.active" type="button" @click="deactivate(row)">停用</button></td></tr></tbody></table></div>
     <Pagination v-model:page="page" v-model:page-size="pageSize"
       :total-items="totalItems" :total-pages="totalPages"
       :loading="loading" @change="load" />

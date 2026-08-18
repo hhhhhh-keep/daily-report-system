@@ -68,7 +68,9 @@ class AnalysisSourceSnapshotServiceTest {
         .contains("\"projectStates\"").contains("\"captured_at\"")
         .contains("\"formal\":true").contains("\"priority\":\"high\"");
     assertThat(executedSql).anySatisfy(sql -> assertThat(sql)
-        .contains("s.captured_at").contains("p.formal").contains("p.priority"));
+        .contains("s.captured_at").contains("p.formal").contains("p.priority").contains("p.active=true"));
+    assertThat(executedSql).anySatisfy(sql -> assertThat(sql)
+        .contains("from daily_tasks t").contains("p.active=true"));
     assertThat(executedSql).anySatisfy(sql -> assertThat(sql)
         .contains("from employees e").contains("e.active=true or exists")
         .contains("r.report_date between ? and ?"));

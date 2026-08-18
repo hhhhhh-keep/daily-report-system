@@ -24,13 +24,11 @@ public class ProjectStateSnapshotService {
           case when fact.current_status='blocked' then 'BLOCKED'
                when fact.current_status='paused' then 'PAUSED'
                when fact.work_type='special-work' then 'IN_PROGRESS'
-               when fact.work_stage in ('requirements-analysis','solution-design','bid-quotation','technical-presentation') then 'PRESALES_IN_PROGRESS'
-               when fact.work_stage in ('implementation','testing-deployment','training-acceptance') then 'DELIVERY_IN_PROGRESS'
-               when fact.work_stage in ('operations-support','incident-handling','optimization-upgrade','customer-support') then 'AFTERSALES_IN_PROGRESS'
+               when fact.work_stage in ('requirements-analysis','solution-design','bid-quotation','technical-presentation','presales-requirements-analysis','presales-solution-design','presales-bid-quotation','presales-technical-presentation') then 'PRESALES_IN_PROGRESS'
+               when fact.work_stage in ('implementation','testing-deployment','training-acceptance','operations-support','incident-handling','optimization-upgrade','customer-support','delivery-implementation','delivery-testing-deployment','delivery-training-acceptance','after-sales-operations-support','after-sales-incident-handling','after-sales-optimization-upgrade','after-sales-customer-support') then 'DELIVERY_IN_PROGRESS'
                when fact.task_id is null then 'NOT_STARTED' else 'IN_PROGRESS' end,
-          case when fact.work_stage in ('requirements-analysis','solution-design','bid-quotation','technical-presentation') then 'presales'
-               when fact.work_stage in ('implementation','testing-deployment','training-acceptance') then 'delivery'
-               when fact.work_stage in ('operations-support','incident-handling','optimization-upgrade','customer-support') then 'aftersales' end,
+          case when fact.work_stage in ('requirements-analysis','solution-design','bid-quotation','technical-presentation','presales-requirements-analysis','presales-solution-design','presales-bid-quotation','presales-technical-presentation') then 'presales'
+               when fact.work_stage in ('implementation','testing-deployment','training-acceptance','operations-support','incident-handling','optimization-upgrade','customer-support','delivery-implementation','delivery-testing-deployment','delivery-training-acceptance','after-sales-operations-support','after-sales-incident-handling','after-sales-optimization-upgrade','after-sales-customer-support') then 'delivery' end,
           fact.work_stage,coalesce(fact.report_date,?),p.owner_name,
           coalesce(metrics.participant_count,0),coalesce(metrics.blocked_task_count,0),
           metrics.latest_report_date,fact.task_id

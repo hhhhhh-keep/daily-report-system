@@ -1,5 +1,7 @@
 package com.company.daily.contracts;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -30,6 +32,20 @@ class AdminManagementContractTest extends PostgresIntegrationTest {
   void rejectsUnauthenticatedAdministrationRequests() throws Exception {
     mockMvc.perform(get("/api/admin/employees"))
         .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void remembersAdministratorSessionForThirtyDaysWhenRequested() throws Exception {
+    MvcResult result = mockMvc.perform(post("/api/admin/session")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"username\":\"admin\",\"password\":\"integration-test-only\",\"rememberMe\":true}"))
+        .andExpect(status().isOk())
+        .andReturn();
+
+    MockHttpSession session = (MockHttpSession) result.getRequest().getSession(false);
+    assertEquals(30 * 24 * 60 * 60, session.getMaxInactiveInterval());
+    assertTrue(result.getResponse().getHeaders("Set-Cookie").stream()
+        .anyMatch(cookie -> cookie.contains("Max-Age=2592000") && cookie.contains("HttpOnly")));
   }
 
   @Test

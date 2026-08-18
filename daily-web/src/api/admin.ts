@@ -293,8 +293,8 @@ export interface DimensionResult {
 }
 
 export const adminApi = {
-  login: (username: string, password: string) =>
-    http.post('/admin/session', { username, password }),
+  login: (username: string, password: string, rememberMe = false) =>
+    http.post('/admin/session', { username, password, rememberMe }),
   session: () => http.get('/admin/session'),
   logout: () => http.delete('/admin/session'),
   changePassword: (currentPassword: string, newPassword: string) =>

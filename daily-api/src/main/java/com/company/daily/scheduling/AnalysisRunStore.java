@@ -131,14 +131,14 @@ public class AnalysisRunStore {
     return jdbcTemplate.query("select e.name || ' / ' || p.name || ': ' || t.progress_result "
         + "from daily_tasks t join daily_reports r on r.id=t.report_id "
         + "join employees e on e.id=r.employee_id join projects p on p.id=t.project_id "
-        + "where r.report_date=? order by e.name,t.id", (rs, row) -> rs.getString(1), date);
+        + "where r.report_date=? and p.active=true order by e.name,t.id", (rs, row) -> rs.getString(1), date);
   }
 
   public List<String> taskTexts(LocalDate startDate, LocalDate endDate) {
     return jdbcTemplate.query("select e.name || ' / ' || p.name || ': ' || t.progress_result "
         + "from daily_tasks t join daily_reports r on r.id=t.report_id "
         + "join employees e on e.id=r.employee_id join projects p on p.id=t.project_id "
-        + "where r.report_date between ? and ? order by r.report_date,e.name,t.id",
+        + "where r.report_date between ? and ? and p.active=true order by r.report_date,e.name,t.id",
         (rs, row) -> rs.getString(1), startDate, endDate);
   }
 
