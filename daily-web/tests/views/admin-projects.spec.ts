@@ -22,6 +22,25 @@ describe('AdminProjectsView', () => {
     expect(wrapper.text()).not.toContain('公安数据湖项目')
   })
 
+  it('uses the same formal-project and special-work labels as daily reporting', async () => {
+    api.projects.mockResolvedValue({ data: {
+      items: [
+        { id: 1, name: '正式项目', formal: true, active: true },
+        { id: 2, name: '专项工作', formal: false, active: true },
+      ],
+      totalItems: 2, page: 0, pageSize: 20, totalPages: 1,
+    } })
+    const wrapper = shallowMount(AdminProjectsView, {
+      global: { stubs: { AdminLayout: { template: '<main><slot /></main>' } } },
+    })
+    await flushPromises()
+
+    await wrapper.get('button.button-primary').trigger('click')
+    expect(wrapper.text()).toContain('正式项目（未勾选为专项工作）')
+    expect(wrapper.find('tbody').text()).toContain('专项工作')
+    expect(wrapper.find('tbody').text()).not.toContain('非正式专项')
+  })
+
   it('loads project report activity when opening the timeline', async () => {
     api.projects.mockResolvedValue({ data: {
       items: [{ id: 1, name: '项目1', formal: true, active: true }],

@@ -39,6 +39,19 @@ describe('AdminAnalysisView', () => {
     expect(open).toHaveBeenCalledWith('/api/admin/runs/2/report', '_blank')
   })
 
+  it('hides internal AI validation details from task records', async () => {
+    api.runs.mockResolvedValue({ data: { items: [{ ...reportRun, llmStatus: 'failed',
+      llmErrorSummary: 'AI 语义分析未通过证据校验，已生成基础报告。校验摘要：{"status":"invalid_analysis"}',
+      errorSummary: 'AI 语义分析未通过证据校验，已生成基础报告。校验摘要：{"status":"invalid_analysis"}' }] } })
+    const wrapper = shallowMount(AdminAnalysisView, {
+      global: { stubs: { AdminLayout: { template: '<main><slot /></main>' } } },
+    })
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('AI 分析未通过证据校验，已生成基础报告，可重新试运行。')
+    expect(wrapper.text()).not.toContain('invalid_analysis')
+  })
+
   it('runs the selected period and refreshes task records', async () => {
     const wrapper = shallowMount(AdminAnalysisView, {
       global: { stubs: { AdminLayout: { template: '<main><slot /></main>' } } },

@@ -14,3 +14,7 @@ test-results/
 **/__pycache__/
 *.py[cod]
 .DS_Store
+**/.tmp/
+.tmp/
+daily-api/logs/*.log
+deliverables/skill-packages/*.zip

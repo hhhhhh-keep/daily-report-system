@@ -43,6 +43,7 @@ onMounted(load)
 
 <template><AdminLayout><section class="admin-page">
   <div class="admin-title"><div><span class="eyebrow">TASK RUNS</span><h1>分析任务记录</h1></div><button type="button" @click="load">刷新</button></div>
+  <p class="feedback">这里汇总计划执行、分析中心手动执行和失败后的重新执行。任务触发后可查看分析状态、报告附件、模型处理和邮件发送结果。</p>
   <p v-if="message" class="feedback" role="status">{{ message }}</p>
   <div class="admin-table-wrap"><table><thead><tr><th>日期</th><th>触发</th><th>状态</th><th>人数</th><th>LLM</th><th>邮件</th><th>错误</th><th>操作</th></tr></thead>
     <tbody><tr v-for="run in runs" :key="run.id"><td>{{ run.analysisDate }}<small>#{{ run.id }}</small></td><td>{{ label(run.triggerType, triggerLabels, '其他触发') }}</td><td>{{ label(run.status, runStatusLabels, '未知') }}</td>

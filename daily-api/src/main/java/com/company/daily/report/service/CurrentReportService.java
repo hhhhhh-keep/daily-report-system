@@ -23,6 +23,7 @@ import java.time.LocalDate;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -118,34 +119,48 @@ public class CurrentReportService {
     return employee;
   }
 
-  private Project resolveProject(CurrentTaskRequest request) {
+  private Project resolveProject(CurrentTaskRequest request, boolean formal) {
+    Project project;
     if (request.projectId() != null) {
-      return projectRepository.findById(request.projectId())
+      project = projectRepository.findById(request.projectId())
           .orElseThrow(() -> new IllegalArgumentException("Project does not exist"));
+    } else {
+      String name = trimmedOrNull(request.projectName());
+      if (name == null) {
+        throw new IllegalArgumentException("Project name is required");
+      }
+      project = projectRepository.findFirstByNameAndActiveTrue(name).orElseGet(() ->
+          projectRepository.save(new Project(
+              name, null, null, null, null, null, "active", null, formal,
+              formal ? null : "daily-special-" + UUID.randomUUID(), true)));
     }
-    String name = trimmedOrNull(request.projectName());
-    if (name == null) {
-      throw new IllegalArgumentException("Project name is required");
+    if (project.isFormal() != formal) {
+      throw new IllegalArgumentException(formal
+          ? "行业/项目支撑只能选择正式项目"
+          : "专项工作只能选择专项工作");
     }
-    return projectRepository.findFirstByNameAndActiveTrue(name).orElseGet(() -> projectRepository.save(
-        new Project(name, null, null, null, null, null, "active", null, true, null, true)));
+    return project;
   }
 
   private ValidatedTask validateTask(CurrentTaskRequest request) {
-    Project project = resolveProject(request); /*
-        .orElseThrow(() -> new IllegalArgumentException("项目或专项不存在"));
-    */ if (!project.isActive()) {
+    requireDictionary("work_type", request.workType(), "工作类型不存在或已停用");
+    boolean projectSupport = "project-support".equals(request.workType());
+    boolean specialWork = "special-work".equals(request.workType());
+    if (!projectSupport && !specialWork) {
+      throw new IllegalArgumentException("工作类型必须为行业/项目支撑或专项工作");
+    }
+    Project project = resolveProject(request, projectSupport);
+    if (!project.isActive()) {
       throw new IllegalArgumentException("项目或专项已停用");
     }
-    requireDictionary("work_type", request.workType(), "工作类型不存在或已停用");
 
     String workStage = trimmedOrNull(request.workStage());
-    if ("project-support".equals(request.workType())) {
+    if (projectSupport) {
       if (workStage == null) {
         throw new IllegalArgumentException("Project support requires a work stage");
       }
       requireDictionary("work_stage", workStage, "Work stage is unavailable");
-    } else if ("special-work".equals(request.workType())) {
+    } else if (specialWork) {
       workStage = null;
     }
     TimePeriod timePeriod = TimePeriod.fromValue(request.timePeriod());

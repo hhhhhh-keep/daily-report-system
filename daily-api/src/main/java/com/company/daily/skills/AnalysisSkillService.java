@@ -114,6 +114,9 @@ public class AnalysisSkillService {
     AnalysisSkillVersion rule = get(ruleVersionId);
     AnalysisSkillVersion template = get(templateVersionId);
     validatePair(period, rule, template);
+    if (rule.status() == AnalysisSkillStatus.PUBLISHED && template.status() == AnalysisSkillStatus.PUBLISHED) {
+      return;
+    }
     if (rule.status() != AnalysisSkillStatus.DRAFT || template.status() != AnalysisSkillStatus.DRAFT
         || rule.trialSucceededAt() == null || template.trialSucceededAt() == null) {
       throw new IllegalArgumentException("仅可成对发布试运行成功的规则和模板草稿");

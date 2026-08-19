@@ -21,5 +21,21 @@ class AnalysisPeriodWindowServiceTest {
     assertThat(service.isScheduledEnd(AnalysisPeriod.WEEKLY, friday)).isTrue();
     assertThat(service.resolve(AnalysisPeriod.WEEKLY, friday).startDate())
         .isEqualTo(LocalDate.of(2026, 8, 10));
+    assertThat(service.isScheduledEnd(AnalysisPeriod.MONTHLY, friday)).isFalse();
+  }
+
+  @Test
+  void selectsTheLastWorkdayOfTheMonthForMonthlyAnalysis() {
+    WorkdayService workdayService = Mockito.mock(WorkdayService.class);
+    LocalDate friday = LocalDate.of(2026, 7, 31);
+    Mockito.when(workdayService.isWorkday(Mockito.any())).thenAnswer(invocation -> {
+      LocalDate date = invocation.getArgument(0);
+      return date.getDayOfWeek().getValue() <= 5;
+    });
+    AnalysisPeriodWindowService service = new AnalysisPeriodWindowService(workdayService);
+
+    assertThat(service.isScheduledEnd(AnalysisPeriod.MONTHLY, friday)).isTrue();
+    assertThat(service.resolve(AnalysisPeriod.MONTHLY, friday).startDate())
+        .isEqualTo(LocalDate.of(2026, 7, 1));
   }
 }

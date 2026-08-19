@@ -19,7 +19,9 @@ REQUIRED_HEADINGS = ("一、总体概况", "二、填报与出勤情况", "三�
 FORBIDDEN_TOKENS = ("领导版", "待人工补充", "数据时区", "PRESALES_IN_PROGRESS",
                     "DELIVERY_IN_PROGRESS", "AFTERSALES_IN_PROGRESS", "operations-support",
                     "snapshot_captured_at", "事实包不完整或未提供",
-                    "无法生成整体判断", "未调用模型或模型结果未通过校验")
+                    "无法生成整体判断", "未调用模型或模型结果未通过校验",
+                    "merge_status", "manual_confirmation_status", "project_status_coverage",
+                    "reconstructed_project_count", "unmerged", "(lead)", "（lead）")
 
 
 @dataclass(frozen=True, slots=True)

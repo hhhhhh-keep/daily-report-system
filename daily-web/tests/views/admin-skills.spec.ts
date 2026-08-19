@@ -28,6 +28,9 @@ describe('AdminSkillsView', () => {
     expect(wrapper.text()).toContain('报告截止日期')
     expect(wrapper.text()).toContain('日报只看这一天；周报统计本周一至这一天；月报统计本月1日至这一天')
     expect(wrapper.text()).not.toContain('试运行历史')
+    const selectedPeriod = wrapper.find('.skill-period-tabs button.active')
+    expect(selectedPeriod.text()).toContain('日报')
+    expect(selectedPeriod.attributes('aria-selected')).toBe('true')
   })
 
   it('offers deletion only for draft versions', async () => {
@@ -66,6 +69,24 @@ describe('AdminSkillsView', () => {
     expect(wrapper.find('[role="dialog"]').exists()).toBe(true)
   })
 
+  it('marks the selected published pair instead of offering a duplicate publish', async () => {
+    api.analysisSkillTrials.mockResolvedValue({ data: [{
+      id: 9, period: 'DAILY', ruleSkillVersionId: 1, templateSkillVersionId: 2,
+      periodStart: '2026-08-19', periodEnd: '2026-08-19', status: 'SUCCEEDED', errorSummary: null,
+    }] })
+    api.analysisSkills.mockImplementation((_period: string, kind: string) => Promise.resolve({
+      data: [{ id: kind === 'RULE' ? 1 : 2, versionNumber: 1, status: 'PUBLISHED' }],
+    }))
+    const wrapper = shallowMount(AdminSkillsView, {
+      global: { stubs: { AdminLayout: { template: '<main><slot /></main>' } } },
+    })
+    await flushPromises()
+
+    const publishButton = wrapper.findAll('button').find(button => button.text() === '当前版本已发布')
+    expect(publishButton?.attributes('disabled')).toBeDefined()
+    expect(wrapper.text()).toContain('所选规则与模板已成对发布')
+  })
+
   it('labels a facts-only result as degraded instead of successful', async () => {
     api.analysisSkillTrials.mockResolvedValue({ data: [{
       id: 18, period: 'DAILY', ruleSkillVersionId: 1, templateSkillVersionId: 2,
@@ -84,7 +105,7 @@ describe('AdminSkillsView', () => {
 
     expect(wrapper.find('[data-testid="latest-successful-trial"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="latest-skill-trial"]').text()).toContain('降级完成')
-    expect(wrapper.find('[data-testid="latest-skill-trial"]').text()).toContain('AI 语义分析未通过证据校验')
+    expect(wrapper.find('[data-testid="latest-skill-trial"]').text()).toContain('AI 分析未通过证据校验')
   })
 
   it('shows the actual trial failure instead of reporting completion', async () => {

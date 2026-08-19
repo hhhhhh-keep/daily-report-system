@@ -20,9 +20,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/admin/workday-calendar")
 public class WorkdayCalendarController {
   private final WorkdayCalendarAdminService service;
+  private final OfficialWorkdayCalendarNoticeService officialNoticeService;
 
-  public WorkdayCalendarController(WorkdayCalendarAdminService service) {
+  public WorkdayCalendarController(WorkdayCalendarAdminService service,
+      OfficialWorkdayCalendarNoticeService officialNoticeService) {
     this.service = service;
+    this.officialNoticeService = officialNoticeService;
   }
 
   @GetMapping
@@ -49,5 +52,11 @@ public class WorkdayCalendarController {
   public List<WorkdayCalendarResponse> importYear(
       @Valid @RequestBody WorkdayCalendarImportRequest request) {
     return service.importYear(request);
+  }
+
+  @PostMapping("/official-preview")
+  public OfficialWorkdayCalendarPreviewResponse previewOfficialNotice(
+      @Valid @RequestBody OfficialWorkdayCalendarPreviewRequest request) {
+    return officialNoticeService.preview(request);
   }
 }

@@ -88,6 +88,29 @@ class CurrentReportServiceTest extends PostgresIntegrationTest {
         .hasMessageContaining("afternoon");
   }
 
+  @Test
+  void matchesProjectsToTheSelectedWorkTypeAndCreatesSpecialWorkAsNonFormal() {
+    CurrentTaskRequest wrongType = new CurrentTaskRequest(
+        "morning", projectId, "special-work", null, "owner", "专项工作", "in-progress",
+        null, null, null);
+    assertThatThrownBy(() -> service.save(new CurrentReportRequest(
+        employeeId, LocalDate.now(), "present", null, List.of(wrongType))))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("专项工作只能选择专项工作");
+
+    CurrentTaskRequest newSpecialWork = new CurrentTaskRequest(
+        "morning", null, "新建专项工作", "special-work", null, "owner", "专项工作", "in-progress",
+        null, null, null);
+    service.save(new CurrentReportRequest(
+        employeeId, LocalDate.now(), "present", null, List.of(newSpecialWork)));
+
+    assertThat(jdbcTemplate.queryForObject(
+        "select formal from projects where name='新建专项工作'", Boolean.class)).isFalse();
+    assertThat(jdbcTemplate.queryForObject(
+        "select system_key from projects where name='新建专项工作'", String.class))
+        .startsWith("daily-special-");
+  }
+
   private CurrentTaskRequest validTask(String result) {
     return new CurrentTaskRequest(
         "morning",

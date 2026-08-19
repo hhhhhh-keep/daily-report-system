@@ -106,36 +106,39 @@ onMounted(loadPeriodStatistics)
         <small v-if="periodStatistics">{{ periodStatistics.periodStart }} 至 {{ periodStatistics.periodEnd }} · {{ periodStatistics.workdayCount }} 个工作日</small>
         <small v-if="periodStatistics" class="period-coverage">统计依据：{{ coverageLabel(periodStatistics.coverageMode) }}</small>
       </div>
-      <div class="period-tabs" aria-label="统计周期">
-        <button type="button" data-testid="period-weekly" :class="{ active: periodMode === 'WEEKLY' }" @click="switchPeriod('WEEKLY')">周统计</button>
-        <button type="button" data-testid="period-monthly" :class="{ active: periodMode === 'MONTHLY' }" @click="switchPeriod('MONTHLY')">月统计</button>
-      </div>
     </header>
-    <p v-if="error" class="feedback error" role="alert">{{ error }}</p>
-    <div class="period-statistics-controls">
-      <label>统计开始日期<input v-model="periodStart" data-testid="period-start" type="date" /></label>
-      <label>统计结束日期<input v-model="periodEnd" data-testid="period-end" type="date" /></label>
-      <button class="button-secondary" type="button" data-testid="period-query" :disabled="periodLoading" @click="queryCustomPeriod">查询统计</button>
-      <button class="button-primary" type="button" data-testid="period-export" :disabled="!periodStatistics || periodExporting" @click="exportPeriodStatistics">{{ periodExporting ? '正在导出…' : '导出 Excel' }}</button>
-    </div>
     <div v-if="periodStatistics" class="period-summary-grid">
       <article><strong>{{ periodStatistics.totals.expectedReportCount }}</strong><span>应填</span></article>
       <article><strong>{{ periodStatistics.totals.earlySubmittedCount }}</strong><span>17:30前填写</span></article>
       <article><strong>{{ periodStatistics.totals.missingCount }}</strong><span>未填</span></article>
       <article><strong>{{ periodStatistics.totals.earlySubmissionRate }}%</strong><span>早填率</span></article>
     </div>
-    <div v-if="periodStatistics" class="admin-table-wrap">
-      <table>
-        <thead><tr><th>人员</th><th>应填</th><th>17:30前填写</th><th>早填率</th><th>未填</th><th>请假次数</th><th>请假折算天数</th><th>培训次数</th></tr></thead>
-        <tbody>
-          <tr class="period-total"><td>部门合计</td><td>{{ periodStatistics.totals.expectedReportCount }}</td><td>{{ periodStatistics.totals.earlySubmittedCount }}</td><td>{{ periodStatistics.totals.earlySubmissionRate }}%</td><td>{{ periodStatistics.totals.missingCount }}</td><td>{{ periodStatistics.totals.leaveOccurrences }}</td><td>{{ periodStatistics.totals.leaveEquivalentDays }}</td><td>{{ periodStatistics.totals.trainingCount }}</td></tr>
-          <tr v-for="person in periodPeople" :key="person.employeeId"><td>{{ person.employeeName }}<small>{{ person.teamName }}</small></td><td>{{ person.expectedReportCount }}</td><td>{{ person.earlySubmittedCount }}</td><td>{{ person.earlySubmissionRate }}%</td><td>{{ person.missingCount }}</td><td>{{ person.leaveOccurrences }}</td><td>{{ person.leaveEquivalentDays }}</td><td>{{ person.trainingCount }}</td></tr>
-          <tr v-if="!periodStatistics.people.length"><td colspan="8" class="empty-row">当前周期暂无人员数据</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p v-else class="empty-row">{{ periodLoading ? '正在统计…' : '当前周期暂无统计数据' }}</p>
-    <Pagination v-if="periodStatistics" v-model:page="periodPage" v-model:page-size="periodPageSize" :total-items="periodTotalItems" :total-pages="periodTotalPages" :loading="periodLoading" />
+    <details class="period-statistics-details">
+      <summary>查看 / 调整统计明细</summary>
+      <p v-if="error" class="feedback error" role="alert">{{ error }}</p>
+      <div class="period-tabs" aria-label="统计周期">
+        <button type="button" data-testid="period-weekly" :class="{ active: periodMode === 'WEEKLY' }" @click="switchPeriod('WEEKLY')">周统计</button>
+        <button type="button" data-testid="period-monthly" :class="{ active: periodMode === 'MONTHLY' }" @click="switchPeriod('MONTHLY')">月统计</button>
+      </div>
+      <div class="period-statistics-controls">
+        <label>统计开始日期<input v-model="periodStart" data-testid="period-start" type="date" /></label>
+        <label>统计结束日期<input v-model="periodEnd" data-testid="period-end" type="date" /></label>
+        <button class="button-secondary" type="button" data-testid="period-query" :disabled="periodLoading" @click="queryCustomPeriod">查询统计</button>
+        <button class="button-primary" type="button" data-testid="period-export" :disabled="!periodStatistics || periodExporting" @click="exportPeriodStatistics">{{ periodExporting ? '正在导出…' : '导出 Excel' }}</button>
+      </div>
+      <div v-if="periodStatistics" class="admin-table-wrap">
+        <table>
+          <thead><tr><th>人员</th><th>应填</th><th>17:30前填写</th><th>早填率</th><th>未填</th><th>请假次数</th><th>请假折算天数</th><th>培训次数</th></tr></thead>
+          <tbody>
+            <tr class="period-total"><td>部门合计</td><td>{{ periodStatistics.totals.expectedReportCount }}</td><td>{{ periodStatistics.totals.earlySubmittedCount }}</td><td>{{ periodStatistics.totals.earlySubmissionRate }}%</td><td>{{ periodStatistics.totals.missingCount }}</td><td>{{ periodStatistics.totals.leaveOccurrences }}</td><td>{{ periodStatistics.totals.leaveEquivalentDays }}</td><td>{{ periodStatistics.totals.trainingCount }}</td></tr>
+            <tr v-for="person in periodPeople" :key="person.employeeId"><td>{{ person.employeeName }}<small>{{ person.teamName }}</small></td><td>{{ person.expectedReportCount }}</td><td>{{ person.earlySubmittedCount }}</td><td>{{ person.earlySubmissionRate }}%</td><td>{{ person.missingCount }}</td><td>{{ person.leaveOccurrences }}</td><td>{{ person.leaveEquivalentDays }}</td><td>{{ person.trainingCount }}</td></tr>
+            <tr v-if="!periodStatistics.people.length"><td colspan="8" class="empty-row">当前周期暂无人员数据</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p v-else class="empty-row">{{ periodLoading ? '正在统计…' : '当前周期暂无统计数据' }}</p>
+      <Pagination v-if="periodStatistics" v-model:page="periodPage" v-model:page-size="periodPageSize" :total-items="periodTotalItems" :total-pages="periodTotalPages" :loading="periodLoading" />
+    </details>
   </section>
 </template>
 
@@ -144,6 +147,9 @@ onMounted(loadPeriodStatistics)
 .period-statistics-head { display: flex; justify-content: space-between; align-items: end; gap: 16px; }
 .period-statistics-head h2 { margin: 3px 0; }
 .period-statistics-head small { color: #667085; }
+.period-statistics-details { margin-top: 18px; }
+.period-statistics-details summary { color: #155eef; cursor: pointer; font-weight: 700; }
+.period-statistics-details[open] summary { margin-bottom: 18px; }
 .period-tabs { display: flex; gap: 8px; }
 .period-tabs button { border: 1px solid #d0d5dd; background: #fff; color: #344054; border-radius: 8px; padding: 8px 16px; font-weight: 700; }
 .period-tabs button.active { background: #155eef; color: #fff; border-color: #155eef; }

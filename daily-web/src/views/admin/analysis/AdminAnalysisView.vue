@@ -37,6 +37,11 @@ function aiStatus(value: string | null | undefined) {
   }
   return statuses[value?.toLowerCase() || ''] || '未执行'
 }
+function fallbackReason(value: string | null | undefined) {
+  return value?.startsWith('AI 语义分析未通过证据校验')
+    ? 'AI 分析未通过证据校验，已生成基础报告，可重新试运行。'
+    : value || '—'
+}
 function periodName(value: string | null | undefined) {
   return value === 'WEEKLY' ? '周报' : value === 'MONTHLY' ? '月报' : '日报'
 }
@@ -71,7 +76,7 @@ onMounted(load)
       <p v-if="pending" class="feedback" role="status">AI 分析中，预计需要 1～3 分钟，请勿重复提交。</p>
       <p v-if="message" class="feedback" role="status">{{ message }}</p>
     </section>
-    <section v-if="runs.length" class="form-card" aria-label="任务记录"><span class="eyebrow">任务记录</span><h2>最近分析任务</h2><div class="admin-table-wrap"><table><thead><tr><th>分析周期</th><th>分析截止日</th><th>运行时间</th><th>报告状态</th><th>AI 分析状态</th><th>AI 降级原因</th><th>邮件状态</th><th>失败原因</th><th>操作</th></tr></thead><tbody><tr v-for="run in runs" :key="run.id"><td>{{ periodName(run.analysisPeriod) }}</td><td>{{ run.analysisDate }}</td><td>{{ formatRunTime(run.startedAt) }}</td><td>{{ reportStatus(run) }}</td><td>{{ aiStatus(run.llmStatus) }}</td><td>{{ run.llmErrorSummary || '—' }}</td><td>{{ emailStatus(run.emailStatus) }}</td><td>{{ run.errorSummary || '—' }}</td><td><button v-if="run.reportAvailable" class="button-secondary" type="button" @click="downloadReport(run)">下载附件</button><span v-else>—</span></td></tr></tbody></table></div></section>
+    <section v-if="runs.length" class="form-card" aria-label="任务记录"><span class="eyebrow">任务记录</span><h2>最近分析任务</h2><div class="admin-table-wrap"><table><thead><tr><th>分析周期</th><th>分析截止日</th><th>运行时间</th><th>报告状态</th><th>AI 分析状态</th><th>AI 降级原因</th><th>邮件状态</th><th>失败原因</th><th>操作</th></tr></thead><tbody><tr v-for="run in runs" :key="run.id"><td>{{ periodName(run.analysisPeriod) }}</td><td>{{ run.analysisDate }}</td><td>{{ formatRunTime(run.startedAt) }}</td><td>{{ reportStatus(run) }}</td><td>{{ aiStatus(run.llmStatus) }}</td><td>{{ fallbackReason(run.llmErrorSummary) }}</td><td>{{ emailStatus(run.emailStatus) }}</td><td>{{ fallbackReason(run.errorSummary) }}</td><td><button v-if="run.reportAvailable" class="button-secondary" type="button" @click="downloadReport(run)">下载附件</button><span v-else>—</span></td></tr></tbody></table></div></section>
     <p v-else class="feedback">暂无任务记录。请选择周期和结束日期后手动运行分析。</p>
   </section></AdminLayout>
 </template>

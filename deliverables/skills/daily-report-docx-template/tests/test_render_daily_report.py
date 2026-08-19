@@ -270,6 +270,48 @@ class RenderDailyReportTests(unittest.TestCase):
 
         self.assertEqual(cleaned, "明确记录为阻塞状态，请跟进客户侧验证。")
 
+    def test_readability_cleanup_hides_internal_project_management_fields(self) -> None:
+        cleaned = _clean_narrative(
+            "项目由吴海宁主导（lead），分类为new。"
+            "在留存的候选项目身份（merge_status=unmerged, manual_confirmation_status=pending）下，"
+            "仍未与正式项目主数据完成合并；补齐项目主数据：落实项目的merge_status与"
+            "manual_confirmation_status，正式确认项目owner。"
+            "数据包未提供项目状态快照（reconstructed_project_count=0, "
+            "project_status_coverage=unavailable）。"
+        )
+
+        self.assertEqual(
+            cleaned,
+            "项目由吴海宁主导，分类为新增动态。数据包未提供项目状态快照。",
+        )
+
+    def test_unlinked_project_is_reported_without_manual_association_prompt(self) -> None:
+        path = render_daily_report(TEMPLATE, FACTS, None, self.output)
+        document = Document(path)
+        text = "\n".join(paragraph.text for paragraph in document.paragraphs)
+
+        self.assertIn("日报中新出现项目", text)
+        self.assertIn("已纳入当日项目动态统计", text)
+        self.assertNotIn("确认关联关系", text)
+        self.assertNotIn("项目维护主数据", text)
+
+    def test_project_already_described_by_ai_is_not_rendered_twice(self) -> None:
+        analysis = deepcopy(ANALYSIS)
+        analysis["continuity_analysis"] = [{
+            "project_id": None,
+            "summary": "连云港健康小屋当日出现项目动态，由丁德胜推进需求调研。",
+            "person_ids": ["p2"],
+            "evidence_ids": ["snapshot-2"],
+            "limitation_note": None,
+        }]
+        path = render_daily_report(TEMPLATE, FACTS, analysis, self.output)
+        document = Document(path)
+        text = "\n".join(paragraph.text for paragraph in document.paragraphs)
+
+        self.assertEqual(1, text.count("连云港健康小屋"))
+        self.assertIn("该项目为日报中新出现项目，即首次出现在本期日报记录中", text)
+        self.assertNotIn("日报中新出现项目：", text)
+
     def test_valid_analysis_avoids_verbose_risk_duplicates_and_keeps_stale_alerts(self) -> None:
         facts = deepcopy(FACTS)
         facts["risk_assessment"].extend([

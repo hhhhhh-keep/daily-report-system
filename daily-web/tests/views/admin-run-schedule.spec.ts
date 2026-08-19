@@ -43,7 +43,24 @@ describe('AdminRunScheduleView', () => {
     expect(wrapper.text()).toContain('最近 17:30 快照')
     expect(wrapper.text()).toContain('最近 22:00 快照')
     expect(wrapper.text()).toContain('应填100 · 已填80 · 未填20')
+    expect(wrapper.text()).toContain('工作日')
+    expect(wrapper.text()).toContain('每周最后一个工作日')
+    expect(wrapper.text()).toContain('每月最后一个工作日')
     expect(api.reportStatisticsSnapshotLatest).toHaveBeenCalledOnce()
     expect(wrapper.text()).not.toContain('Cron')
+  })
+
+  it('only shows a save result in the schedule card that was saved', async () => {
+    api.updateAnalysisPeriodConfiguration.mockImplementation((period: { period: string }) => Promise.resolve({ data: period }))
+    const wrapper = shallowMount(AdminRunScheduleView, {
+      global: { stubs: { AdminLayout: { template: '<main><slot /></main>' } } },
+    })
+    await flushPromises()
+
+    await wrapper.findAll('button').find(button => button.text() === '保存周报分析计划')!.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.findAll('[role="status"]')).toHaveLength(1)
+    expect(wrapper.find('[role="status"]').text()).toBe('✓ 周报分析计划已保存')
   })
 })

@@ -2,14 +2,17 @@ package com.company.daily.metrics;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.util.Map;
+import java.time.ZoneId;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class MetricsService {
+  private static final ZoneId CHINA_ZONE = ZoneId.of("Asia/Shanghai");
   private final JdbcTemplate jdbcTemplate;
 
   public MetricsService(JdbcTemplate jdbcTemplate) {
@@ -37,14 +40,21 @@ public class MetricsService {
             + "where r.report_date = ? and t.time_period in ('afternoon','full-day')", date, true);
     BigDecimal rate = employees == 0 ? BigDecimal.ZERO : BigDecimal.valueOf(reports)
         .multiply(BigDecimal.valueOf(100)).divide(BigDecimal.valueOf(employees), 2, RoundingMode.HALF_UP);
-    Map<String, Object> progress = jdbcTemplate.query("select submitted_count,missing_count,submission_rate "
-        + "from report_statistics_snapshots where snapshot_date=? and snapshot_type='PROGRESS_1730'",
-        resultSet -> resultSet.next() ? Map.of("submitted", resultSet.getInt(1), "missing", resultSet.getInt(2),
-            "rate", resultSet.getBigDecimal(3).multiply(BigDecimal.valueOf(100))) : Map.of(), date);
+    int progressSubmitted = progress1730SubmittedCount(date);
+    int progressMissing = Math.max(0, employees - progressSubmitted);
+    BigDecimal progressRate = employees == 0 ? BigDecimal.ZERO : BigDecimal.valueOf(progressSubmitted)
+        .multiply(BigDecimal.valueOf(100)).divide(BigDecimal.valueOf(employees), 2, RoundingMode.HALF_UP);
     return new DashboardMetricsResponse(date, employees, reports, Math.max(0, employees - reports),
         tasks, projects, abnormal, morning, afternoon, rate,
-        (BigDecimal) progress.getOrDefault("rate", BigDecimal.ZERO),
-        (Integer) progress.getOrDefault("submitted", 0), (Integer) progress.getOrDefault("missing", 0));
+        progressRate, progressSubmitted, progressMissing);
+  }
+
+  private int progress1730SubmittedCount(LocalDate date) {
+    Instant cutoff = date.atTime(17, 30).atZone(CHINA_ZONE).toInstant();
+    Integer result = jdbcTemplate.queryForObject(
+        "select count(*) from daily_reports where report_date=? and status='submitted' and submitted_at <= ?",
+        Integer.class, date, Timestamp.from(cutoff));
+    return result == null ? 0 : result;
   }
 
   private int count(String sql, LocalDate date, boolean usesDate) {

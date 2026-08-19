@@ -143,7 +143,7 @@ class SkillAnalysisExecutorTest {
   }
 
   @Test
-  void normalizesVersion12SingletonSectionsAndMarksReconstructedProjects() throws Exception {
+  void normalizesVersion12SingletonSectionsWithoutAddingProjectAssociationWarnings() throws Exception {
     ObjectMapper mapper = new ObjectMapper();
     CapturingScriptRuntime runtime = new CapturingScriptRuntime();
     SkillAnalysisExecutor executor = new SkillAnalysisExecutor(new StubConfigurationService(),
@@ -166,10 +166,10 @@ class SkillAnalysisExecutorTest {
         .contains("\"next_day_actions\":[{")
         .contains("\"project_id\":\"project-candidate-1\"")
         .contains("\"project_id\":\"project-reconstructed-1\"")
-        .contains("\"limitation_note\":\"该项目由日报文本重建，需人工核验项目名称与归并关系。\"");
+        .contains("\"limitation_note\":null");
     assertThat(mapper.readTree(runtime.validatedAnalysis)
         .path("next_day_actions").path(0).path("limitation_note").asText())
-        .isEqualTo("该项目由日报文本重建，需人工核验项目名称与归并关系。");
+        .isEmpty();
   }
 
   @Test
@@ -227,6 +227,7 @@ class SkillAnalysisExecutorTest {
     assertThat(result.aiStatus()).isEqualTo("failed");
     assertThat(result.analysisDraft()).isNull();
     assertThat(result.errorSummary()).contains("基础报告");
+    assertThat(result.errorSummary()).doesNotContain("校验摘要").doesNotContain("invalid_analysis");
     assertThat(result.renderedDocument()).containsExactly("facts-only".getBytes(StandardCharsets.UTF_8));
     assertThat(runtime.factsOnlyRendered).isTrue();
   }

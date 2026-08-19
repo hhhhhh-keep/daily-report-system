@@ -1,6 +1,7 @@
 package com.company.daily.email;
 
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -14,7 +15,7 @@ public class SmtpTestEmailController {
   }
 
   @PostMapping("/test")
-  public SmtpTestEmailResponse test() {
-    return service.send();
+  public SmtpTestEmailResponse test(@RequestBody SmtpTestEmailRequest request) {
+    return service.send(request.recipients(), request.ccRecipients());
   }
 }

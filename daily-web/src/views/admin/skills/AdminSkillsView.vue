@@ -28,6 +28,8 @@ const latestTrialSuccessful = computed(() => latestTrial.value?.status === 'SUCC
   && !latestTrial.value.errorSummary)
 const canPublish = computed(() => Boolean(latestTrialSuccessful.value
   && selected.value.RULE && selected.value.TEMPLATE))
+const selectedPairPublished = computed(() => ['RULE', 'TEMPLATE'].every(kind => versions.value[kind as AnalysisSkillKind]
+  .some(version => version.id === selected.value[kind as AnalysisSkillKind] && version.status === 'PUBLISHED')))
 const latestTrialHasDocument = computed(() => latestTrial.value?.hasDocument === true)
 
 function versionStatus(status: string) {
@@ -36,6 +38,11 @@ function versionStatus(status: string) {
 function versionLabel(kind: AnalysisSkillKind, id: number | null) {
   const version = versions.value[kind].find(item => item.id === id)
   return `v${version?.versionNumber ?? '-'}（${versionStatus(version?.status ?? '')}）`
+}
+function trialIssue(value?: string | null) {
+  return value?.startsWith('AI 语义分析未通过证据校验')
+    ? 'AI 分析未通过证据校验，已生成基础报告，可重新试运行'
+    : value ?? '请检查规则与模板 Skill'
 }
 function formatDateTime(value?: string | null) {
   if (!value) return '—'
@@ -81,15 +88,15 @@ async function runTrial() {
     )
     const trial = response.data
     message.value = trial.status === 'SUCCEEDED'
-      ? trial.errorSummary ? `试运行降级完成：${trial.errorSummary}` : '试运行成功，可查看结果并下载报告'
-      : `试运行失败：${trial.errorSummary ?? '请检查规则与模板 Skill'}`
+      ? trial.errorSummary ? `试运行降级完成：${trialIssue(trial.errorSummary)}` : '试运行成功，可查看结果并下载报告'
+      : `试运行失败：${trialIssue(trial.errorSummary)}`
     await load()
   }
   catch (error) { message.value = apiError(error).message }
   finally { trialRunning.value = false }
 }
 async function publish() {
-  if (!selected.value.RULE || !selected.value.TEMPLATE) return
+  if (!selected.value.RULE || !selected.value.TEMPLATE || selectedPairPublished.value) return
   try { await adminApi.publishAnalysisSkills(period.value, selected.value.RULE, selected.value.TEMPLATE); message.value = '规则与模板已成对发布'; await load() }
   catch (error) { message.value = apiError(error).message }
 }
@@ -117,7 +124,9 @@ onUnmounted(() => { if (trialPollTimer) clearTimeout(trialPollTimer) })
     <section class="admin-page">
       <div class="admin-title"><div><span class="eyebrow">智能分析</span><h1>智能分析技能</h1></div></div>
       <p class="feedback">上传受控 ZIP 包（根目录含 SKILL.md）。系统仅向分析技能提供日报、项目、工作日历与快照数据，不提供数据库或网络权限。</p>
-      <div class="period-tabs" role="tablist"><button v-for="(_, key) in names" :key="key" type="button" :class="{ active: period === key }" @click="changePeriod(key)">{{ names[key] }}</button></div>
+      <div class="period-tabs skill-period-tabs" role="tablist" aria-label="分析周期">
+        <button v-for="(_, key) in names" :key="key" type="button" role="tab" :class="{ active: period === key }" :aria-selected="period === key" @click="changePeriod(key)">{{ names[key] }}</button>
+      </div>
 
       <div class="analysis-grid">
         <article v-for="slot in kinds" :key="slot.kind" class="skill-slot">
@@ -133,7 +142,8 @@ onUnmounted(() => { if (trialPollTimer) clearTimeout(trialPollTimer) })
         <h2>成对试运行与发布</h2>
         <p>先生成分析结论，再生成管理报告。两者针对同一历史周期试运行成功后，才可成对发布。</p>
         <label>报告截止日期<input v-model="endDate" type="date" /></label><p class="field-hint">请选择要生成报告的最后一个工作日。日报只看这一天；周报统计本周一至这一天；月报统计本月1日至这一天。项目未更新提醒也截至这一天计算。</p><button data-testid="run-skill-trial" class="button-secondary" type="button" :disabled="!selected.RULE || !selected.TEMPLATE || isTrialRunning" @click="runTrial">{{ isTrialRunning ? '正在试运行…' : '试运行所选版本' }}</button>
-        <button class="button-primary" type="button" :disabled="!canPublish" @click="publish">成对发布</button>
+        <button class="button-primary" type="button" :disabled="!canPublish || selectedPairPublished" @click="publish">{{ selectedPairPublished ? '当前版本已发布' : '成对发布' }}</button>
+        <p v-if="selectedPairPublished" class="field-hint">所选规则与模板已成对发布，后续正式分析将使用该版本。</p>
         <p v-if="message" class="feedback" role="status">{{ message }}</p>
       </section>
 
@@ -143,7 +153,7 @@ onUnmounted(() => { if (trialPollTimer) clearTimeout(trialPollTimer) })
         <p>执行时间：{{ formatDateTime(latestTrial.startedAt) }}</p>
         <p>使用版本：规则分析 {{ versionLabel('RULE', latestTrial.ruleSkillVersionId) }} · 报告模板 {{ versionLabel('TEMPLATE', latestTrial.templateSkillVersionId) }}</p>
         <p v-if="latestTrial.status === 'RUNNING'">任务已提交到后台，切换菜单或刷新页面不会丢失，完成后本页会自动更新。</p>
-        <p v-else-if="latestTrialDegraded">{{ latestTrial.errorSummary }}。当前仅生成基础报告，不能成对发布。</p>
+        <p v-else-if="latestTrialDegraded">{{ trialIssue(latestTrial.errorSummary) }}。当前仅生成基础报告，不能成对发布。</p>
         <p v-else-if="latestTrialSuccessful">规则结论和管理报告已生成，可分别查看。</p>
         <p v-else>{{ latestTrial.errorSummary ?? '试运行未成功，请检查任务日志。' }}</p>
         <div v-if="latestTrial.status === 'SUCCEEDED'" class="button-row"><button v-if="latestTrial.analysisDraft" data-testid="view-analysis-draft" class="button-secondary" type="button" @click="viewResult('分析结论', latestTrial.analysisDraft)">查看分析结论</button><button data-testid="view-rendered-report" class="button-primary" type="button" @click="viewResult('报告预览', latestTrial.renderedHtml ?? '', true)">查看报告预览</button><button v-if="latestTrialHasDocument" data-testid="download-docx" class="button-secondary" type="button" @click="downloadDocument(latestTrial.id)">下载 Word</button></div>

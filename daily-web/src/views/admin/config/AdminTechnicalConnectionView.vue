@@ -12,6 +12,8 @@ const errorMessage = ref('')
 const connectionMessage = ref('')
 const smtpTestPending = ref(false)
 const smtpTestMessage = ref('')
+const smtpTestRecipients = ref('')
+const smtpTestCcRecipients = ref('')
 const smtpHasConfig = computed(() => Boolean(config.value && (config.value.smtpHost || config.value.smtpPort || config.value.smtpUsername || config.value.smtpPassword || config.value.smtpFrom)))
 
 async function load() {
@@ -33,13 +35,16 @@ async function testModelConnection() {
   catch (caught) { errorMessage.value = apiError(caught).message }
 }
 async function sendTestEmail() {
+  const recipients = splitRecipients(smtpTestRecipients.value)
+  if (!recipients.length) { errorMessage.value = '请填写测试收件人'; return }
   smtpTestPending.value = true
   smtpTestMessage.value = ''
   errorMessage.value = ''
-  try { smtpTestMessage.value = (await adminApi.sendTestEmail()).data.message }
+  try { smtpTestMessage.value = (await adminApi.sendTestEmail({ recipients, ccRecipients: splitRecipients(smtpTestCcRecipients.value) })).data.message }
   catch (caught) { errorMessage.value = apiError(caught).message }
   finally { smtpTestPending.value = false }
 }
+function splitRecipients(value: string) { return value.split(/[,，]/).map(item => item.trim()).filter(Boolean) }
 function clearSmtp() {
   if (!config.value) return
   config.value.smtpHost = null; config.value.smtpPort = null; config.value.smtpUsername = null; config.value.smtpPassword = null; config.value.smtpFrom = null
@@ -65,8 +70,10 @@ onMounted(load)
         <label>用户名<input v-model.trim="config.smtpUsername" autocomplete="off" placeholder="通常是发件邮箱" /></label>
         <label>密码 / 授权码<div class="secret-input"><input v-model="config.smtpPassword" :type="showSmtpPassword ? 'text' : 'password'" autocomplete="off" placeholder="留空时使用 SMTP_PASSWORD" /><button type="button" class="button-link" @click="showSmtpPassword = !showSmtpPassword">{{ showSmtpPassword ? '隐藏' : '显示' }}</button></div></label>
         <label class="field-wide">发件人地址<input v-model.trim="config.smtpFrom" placeholder="例如 noreply@example.com" /></label>
+        <label>测试收件人（逗号分隔）<input v-model="smtpTestRecipients" type="email" multiple placeholder="仅本次测试使用" /></label>
+        <label>测试抄送人（选填）<input v-model="smtpTestCcRecipients" type="email" multiple placeholder="仅本次测试使用" /></label>
         <div class="field-wide form-actions-inline"><button v-if="smtpHasConfig" type="button" class="button-link danger" @click="clearSmtp">清空发件箱配置（改用环境变量）</button><p class="hint">留空字段将沿用服务器环境变量；保存后立即生效，无需重启服务。</p></div>
-        <div class="field-wide form-actions-inline"><button data-testid="send-test-email" type="button" class="button-secondary" :disabled="smtpTestPending" @click="sendTestEmail">{{ smtpTestPending ? '发送中…' : '发送测试邮件' }}</button><span v-if="smtpTestMessage" class="feedback" role="status">{{ smtpTestMessage }}</span><p class="hint">使用已保存配置发送，不调用 AI、Skill 或正式报告流程。</p></div>
+        <div class="field-wide form-actions-inline"><button data-testid="send-test-email" type="button" class="button-secondary" :disabled="smtpTestPending" @click="sendTestEmail">{{ smtpTestPending ? '发送中…' : '发送测试邮件' }}</button><span v-if="smtpTestMessage" class="feedback" role="status">{{ smtpTestMessage }}</span><p class="hint">使用已保存 SMTP 配置发送；测试收件人不保存，不影响各周期正式邮件。</p></div>
       </div></section>
       <div class="save-bar"><button class="button-primary" type="submit">保存技术连接</button><p v-if="message" class="save-feedback success" role="status">✓ {{ message }}</p></div>
     </form>

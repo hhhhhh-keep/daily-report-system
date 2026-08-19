@@ -26,6 +26,16 @@ TECHNICAL_ID = re.compile(r"(?:employee|project|task)-[A-Za-z0-9_/-]+", re.IGNOR
 TECHNICAL_PAREN = re.compile(r"[（(]([^（）()]*(?:employee|project|task)-[^（）()]*)[）)]", re.IGNORECASE)
 IMPORTED_BLOCKER = "Imported blocker needs external coordination"
 UNKNOWN_STATUS_CODE = re.compile(r"\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\b")
+INTERNAL_PROJECT_FIELDS = re.compile(
+    r"[（(]\s*(?:(?:merge_status|manual_confirmation_status|reconstructed_project_count|"
+    r"project_status_coverage)\s*=\s*[^，,；;）)]*\s*[，,；;]?\s*)+[）)]",
+    re.IGNORECASE,
+)
+INTERNAL_PROJECT_ACTION = re.compile(
+    r"(?:补齐|核对|确认)[^。；;]*(?:merge_status|manual_confirmation_status|"
+    r"project\s*owner|项目owner|归并关系|关联关系)[^。；;]*[。；;]?",
+    re.IGNORECASE,
+)
 
 
 def create_template(path: Path) -> Path:
@@ -162,10 +172,19 @@ def _continuity_narrative(document: Document, facts: Mapping[str, object],
                 if not _contains_hidden_project(str(item.get("summary") or ""))]
     deterministic = [item for item in _list(facts.get("project_continuity"))
                      if _is_visible_project(item.get("project_name"))]
+    unlinked = [item for item in _list(facts.get("unlinked_project_dynamics"))
+                if _is_visible_project(item.get("project_name"))]
+    unlinked_names = {str(item.get("project_name")) for item in unlinked}
+    described_unlinked_names: set[str] = set()
     rendered = False
     if ai_items:
         for index, item in enumerate(ai_items, 1):
-            _numbered_body(document, index, str(item.get("summary")))
+            summary = str(item.get("summary") or "")
+            for project_name in unlinked_names:
+                if project_name in summary:
+                    summary += " 该项目为日报中新出现项目，即首次出现在本期日报记录中，已纳入当日项目动态统计。"
+                    described_unlinked_names.add(project_name)
+            _numbered_body(document, index, summary)
         rendered = True
     elif deterministic:
         classification_names = {
@@ -175,12 +194,15 @@ def _continuity_narrative(document: Document, facts: Mapping[str, object],
         for index, item in enumerate(deterministic, 1):
             active_dates = [_chinese_date(value, include_year=False) for value in _string_list(item.get("active_dates"))]
             task_count = _project_task_count(facts, item)
-            _numbered_body(
-                document, index,
+            summary = (
                 f"{_display(item.get('project_name'))}：{classification_names.get(item.get('classification'), '窗口内有动态')}；"
                 f"动态日期为{_join(active_dates)}；参与人员{_join(item.get('people'))}；"
-                f"当日记录{task_count}项事项，已形成项目推进动态，详情见原始日报证据。",
+                f"当日记录{task_count}项事项，已形成项目推进动态，详情见原始日报证据。"
             )
+            if str(item.get("project_name")) in unlinked_names:
+                summary += " 该项目为日报中新出现项目，即首次出现在本期日报记录中，已纳入当日项目动态统计。"
+                described_unlinked_names.add(str(item.get("project_name")))
+            _numbered_body(document, index, summary)
         rendered = True
 
     known = ({item.get("project_id") for item in ai_items}
@@ -191,10 +213,10 @@ def _continuity_narrative(document: Document, facts: Mapping[str, object],
         _body(document, "当日项目补充：")
         _formal_projects(document, supplements, None)
         rendered = True
-    unlinked = [item for item in _list(facts.get("unlinked_project_dynamics"))
-                if _is_visible_project(item.get("project_name"))]
+    unlinked = [item for item in unlinked
+                if str(item.get("project_name")) not in described_unlinked_names]
     if unlinked:
-        _body(document, "日报识别待关联项目：")
+        _body(document, "日报中新出现项目：")
         _unlinked_projects(document, unlinked)
         rendered = True
     if not rendered:
@@ -345,7 +367,7 @@ def _unlinked_projects(document: Document, value: object) -> None:
         _numbered_body(
             document, index,
             f"{_display(item.get('project_name'))}：涉及人员{_join(people)}，当日事项"
-            f"{_display(item.get('task_count'))}项。该名称来自日报语义识别，需核对项目维护主数据后确认关联关系。",
+            f"{_display(item.get('task_count'))}项，已纳入当日项目动态统计。",
         )
 
 
@@ -462,6 +484,11 @@ def _clean_narrative(text: object) -> str:
     value = str(text or "")
 
     value = value.replace(IMPORTED_BLOCKER, "存在阻塞事项，待补充具体原因")
+    value = INTERNAL_PROJECT_FIELDS.sub("", value)
+    value = INTERNAL_PROJECT_ACTION.sub("", value)
+    value = re.sub(r"在留存的候选项目身份[^。；;]*[。；;]?", "", value)
+    value = re.sub(r"仍未与正式项目主数据完成合并[；;]?", "", value)
+    value = re.sub(r"主导\s*[（(]\s*lead\s*[）)]", "主导", value, flags=re.IGNORECASE)
 
     value = re.sub(
         r"其余动态[^，,。；;]*(?:内部专项|暂无正式项目)[^，,。；;]*[，,]?",
@@ -478,6 +505,22 @@ def _clean_narrative(text: object) -> str:
         ("blocked", "受阻"),
         ("completed", "已完成"),
         ("planned", "计划中"),
+        ("merge_status", "项目归并状态"),
+        ("manual_confirmation_status", "项目确认状态"),
+        ("reconstructed_project_count", "重建项目数量"),
+        ("project_status_coverage", "项目状态数据完整度"),
+        ("project owner", "项目负责人"),
+        ("project_owner", "项目负责人"),
+        ("relation_type", "协同角色"),
+        ("snapshot_origin", "数据来源"),
+        ("snapshot_captured_at", "快照时间"),
+        ("unmerged", "未归并"),
+        ("pending", "待处理"),
+        ("unavailable", "暂无数据"),
+        ("available", "已具备"),
+        ("lead", "主责"),
+        ("collaborator", "协同"),
+        ("new", "新增动态"),
         ("operations-support", "运维保障"),
     ):
         value = value.replace(code, label)

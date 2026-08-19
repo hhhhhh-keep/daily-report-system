@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -91,9 +92,31 @@ class AnalysisSkillServicePersistenceTest {
     assertThat(runningInserted).isTrue();
   }
 
+  @Test
+  void publishingAnAlreadyPublishedPairIsANoOp() {
+    JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
+    AnalysisSkillService service = spy(new AnalysisSkillService(jdbcTemplate,
+        mock(SkillPackageValidator.class), mock(AnalysisPeriodWindowService.class),
+        mock(AnalysisSourceSnapshotService.class), mock(SkillAnalysisExecutor.class)));
+    doReturn(publishedVersion(1, AnalysisSkillKind.RULE)).when(service).get(1);
+    doReturn(publishedVersion(2, AnalysisSkillKind.TEMPLATE)).when(service).get(2);
+
+    service.publishPair(AnalysisPeriod.DAILY, 1, 2);
+
+    verify(jdbcTemplate, never()).update(anyString(), any(Object[].class));
+  }
+
   private static AnalysisSkillVersion version(long id, AnalysisSkillKind kind) {
     return new AnalysisSkillVersion(id, AnalysisPeriod.DAILY, kind, 1, AnalysisSkillStatus.DRAFT,
         "skill", "test", "skill.zip", "checksum", "ok", "daily-python-3.12-v1",
         null, null, null);
+  }
+
+  private static AnalysisSkillVersion publishedVersion(long id, AnalysisSkillKind kind) {
+    AnalysisSkillVersion draft = version(id, kind);
+    return new AnalysisSkillVersion(draft.id(), draft.period(), draft.kind(), draft.versionNumber(),
+        AnalysisSkillStatus.PUBLISHED, draft.skillName(), draft.description(), draft.packageName(),
+        draft.checksum(), draft.validationMessage(), draft.runtimeProfile(), draft.trialSucceededAt(),
+        draft.publishedAt(), draft.createdAt());
   }
 }

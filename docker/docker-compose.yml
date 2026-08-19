@@ -7,6 +7,11 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d daily_report"]
       interval: 5s
@@ -36,9 +41,17 @@ services:
       WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:8080}
       SKILLS_SCRIPTED_ENABLED: ${SKILLS_SCRIPTED_ENABLED:-true}
       SKILLS_PYTHON_EXECUTABLE: ${SKILLS_PYTHON_EXECUTABLE:-python}
+      LOG_DIRECTORY: /var/log/daily-api
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - api-logs:/var/log/daily-api
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
 
   daily-web:
     build:
@@ -46,6 +59,11 @@ services:
     depends_on:
       daily-api:
         condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
 
   nginx:
     image: nginx:1.29-alpine
@@ -58,6 +76,11 @@ services:
         condition: service_healthy
       daily-api:
         condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/actuator/health"]
       interval: 10s
@@ -66,3 +89,4 @@ services:
 
 volumes:
   postgres-data:
+  api-logs:

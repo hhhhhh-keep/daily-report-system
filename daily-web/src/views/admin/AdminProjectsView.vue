@@ -129,16 +129,16 @@ onMounted(load)
 
 <template>
   <AdminLayout><section class="admin-page">
-    <div class="admin-title"><div><span class="eyebrow">MASTER DATA</span><h1>项目与专项维护</h1></div></div>
-    <button class="button-primary" type="button" @click="create">新增项目 / 专项</button>
+    <div class="admin-title"><div><span class="eyebrow">MASTER DATA</span><h1>项目与专项工作维护</h1></div></div>
+    <button class="button-primary" type="button" @click="create">新增正式项目 / 专项工作</button>
     <div v-if="formOpen" class="modal-backdrop" @click.self="reset"><form class="admin-form wide modal-panel" @submit.prevent="save">
       <label>名称<input v-model.trim="form.name" required /></label><label>项目编号<input v-model.trim="form.code" /></label>
       <label>客户<input v-model.trim="form.customerName" /></label><label>行业<input v-model.trim="form.industry" /></label>
       <label>项目阶段<input v-model.trim="form.projectStage" /></label><label>负责人<input v-model.trim="form.ownerName" /></label>
       <label>优先级<select v-model="form.priority"><option value="">未设置</option><option v-for="[value, text] in priorityOptions" :key="value" :value="value">{{ text }}</option></select></label>
       <label>状态<select v-model="form.status" required><option v-for="[value, text] in projectStatusOptions" :key="value" :value="value">{{ text }}</option></select></label>
-      <label class="check-field"><input v-model="form.formal" type="checkbox" /> 正式项目</label>
-      <label v-if="!form.formal">系统标识<input v-model.trim="form.systemKey" required /></label>
+      <label class="check-field"><input v-model="form.formal" type="checkbox" /> 正式项目（未勾选为专项工作）</label>
+      <label v-if="!form.formal">专项标识<input v-model.trim="form.systemKey" required /></label>
       <label class="check-field"><input v-model="form.active" type="checkbox" /> 启用</label>
       <div class="form-actions"><button class="button-primary" type="submit">{{ editingId ? '保存修改' : '保存项目' }}</button>
         <button type="button" @click="reset">取消</button></div>
@@ -146,7 +146,7 @@ onMounted(load)
     <p v-if="message" class="feedback" role="status">{{ message }}</p>
     <label class="project-search">搜索项目<input data-testid="project-search" v-model.trim="search" placeholder="名称、编号、客户、负责人或状态" /></label>
     <div class="admin-table-wrap"><table><thead><tr><th>名称</th><th>类型</th><th>编号 / 标识</th><th>状态</th><th>操作</th></tr></thead>
-      <tbody><tr v-for="row in filteredRows" :key="row.id"><td>{{ row.name }}</td><td>{{ row.formal ? '正式项目' : '非正式专项' }}</td>
+      <tbody><tr v-for="row in filteredRows" :key="row.id"><td>{{ row.name }}</td><td>{{ row.formal ? '正式项目' : '专项工作' }}</td>
         <td>{{ row.code || row.systemKey }}</td><td>{{ row.active ? '启用' : '停用' }}</td><td class="table-actions"><button type="button" @click="edit(row)">编辑</button>
           <button class="activity-button" type="button" @click="showActivity(row)">日报动态</button>
           <button v-if="row.active" type="button" @click="deactivate(row)">停用</button></td></tr></tbody></table></div>

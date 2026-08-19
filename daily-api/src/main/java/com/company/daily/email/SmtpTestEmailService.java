@@ -6,6 +6,7 @@ import com.company.daily.configuration.AnalysisConfigurationService;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -28,13 +29,11 @@ public class SmtpTestEmailService {
     this.environment = environment;
   }
 
-  public SmtpTestEmailResponse send() {
+  public SmtpTestEmailResponse send(List<String> recipients, List<String> ccRecipients) {
     AnalysisConfiguration configuration = configurationService.get();
-    if (!configuration.emailEnabled()) {
-      throw new IllegalArgumentException("请先启用 SMTP 邮件发送并保存配置");
-    }
-    if (configuration.recipients() == null || configuration.recipients().isEmpty()) {
-      throw new IllegalArgumentException("请先配置收件人并保存配置");
+    List<String> targetRecipients = clean(recipients);
+    if (targetRecipients.isEmpty()) {
+      throw new IllegalArgumentException("请填写测试收件人");
     }
     SmtpSettings settings = SmtpSettings.fromConfiguration(configuration, environment);
     if (!settings.isUsable() || !StringUtils.hasText(settings.from())) {
@@ -42,7 +41,7 @@ public class SmtpTestEmailService {
     }
     String sentAt = OffsetDateTime.now(BUSINESS_ZONE).format(TIME_FORMATTER);
     EmailMessage message = new EmailMessage(
-        configuration.recipients(), configuration.ccRecipients(),
+        targetRecipients, clean(ccRecipients),
         "日报分析系统 SMTP 测试邮件",
         "<p>这是一封由日报分析系统管理员主动触发的 SMTP 测试邮件。</p>"
             + "<p>发送时间：" + sentAt + "</p>",
@@ -50,5 +49,10 @@ public class SmtpTestEmailService {
     gateway.send(message, settings);
     return new SmtpTestEmailResponse(
         true, "测试邮件已发送，请检查收件箱和垃圾邮件目录。");
+  }
+
+  private static List<String> clean(List<String> values) {
+    return values == null ? List.of() : values.stream().filter(StringUtils::hasText)
+        .map(String::trim).toList();
   }
 }

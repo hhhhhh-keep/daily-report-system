@@ -101,6 +101,12 @@ export interface WorkdayCalendarImportItem {
   note?: string | null
 }
 
+export interface OfficialWorkdayCalendarPreview {
+  year: number
+  noticeUrl: string
+  entries: WorkdayCalendarImportItem[]
+}
+
 export interface ReportSummary {
   id: number
   date: string
@@ -295,7 +301,7 @@ export interface DimensionResult {
 export const adminApi = {
   login: (username: string, password: string, rememberMe = false) =>
     http.post('/admin/session', { username, password, rememberMe }),
-  session: () => http.get('/admin/session'),
+  session: () => http.get('/admin/session', { silent: true }),
   logout: () => http.delete('/admin/session'),
   changePassword: (currentPassword: string, newPassword: string) =>
     http.put('/admin/password', { currentPassword, newPassword }),
@@ -330,6 +336,8 @@ export const adminApi = {
     http.delete(`/admin/workday-calendar/override/${date}`),
   importWorkdayCalendar: (year: number, entries: WorkdayCalendarImportItem[]) =>
     http.post<WorkdayCalendarRecord[]>('/admin/workday-calendar/import', { year, entries }),
+  previewOfficialWorkdayCalendar: (year: number, noticeUrl: string) =>
+    http.post<OfficialWorkdayCalendarPreview>('/admin/workday-calendar/official-preview', { year, noticeUrl }),
   reports: (params: {
     date?: string
     employeeId?: number
@@ -354,8 +362,8 @@ export const adminApi = {
     http.put<AnalysisConfiguration>('/admin/configuration/analysis', value),
   testAnalysisConnection: (value: Pick<AnalysisConfiguration, 'modelEndpoint' | 'modelName' | 'modelApiKey'>) =>
     http.post<{ connected: boolean; message: string }>('/admin/configuration/analysis/test-connection', value),
-  sendTestEmail: () =>
-    http.post<{ sent: boolean; message: string }>('/admin/configuration/email/test'),
+  sendTestEmail: (value: { recipients: string[]; ccRecipients: string[] }) =>
+    http.post<{ sent: boolean; message: string }>('/admin/configuration/email/test', value),
   reportStatisticsConfiguration: () =>
     http.get<ReportStatisticsConfiguration>('/admin/configuration/report-statistics'),
   reportStatisticsSnapshots: (startDate: string, endDate: string) =>

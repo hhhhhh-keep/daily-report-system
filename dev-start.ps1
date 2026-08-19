@@ -67,7 +67,9 @@ Write-Host "[1/3] Starting Spring Boot (daily-api) on :8080..." -ForegroundColor
 # Java 21-only (SequencedCollection). JDK 17 cannot compile this project.
 $jdk21 = 'D:\Program Files\Java\jdk-21'
 $javaHomeClause = if (Test-Path $jdk21) { "`$env:JAVA_HOME='$jdk21'; `$env:PATH='$jdk21\bin;' + `$env:PATH; " } else { '' }
-$backendCmd = "${javaHomeClause}`$env:SPRING_PROFILES_ACTIVE='local'; Set-Location '$repoRoot\daily-api'; .\mvnw spring-boot:run"
+$localLogDirectory = Join-Path $repoRoot 'daily-api\logs'
+New-Item -ItemType Directory -Path $localLogDirectory -Force | Out-Null
+$backendCmd = "${javaHomeClause}`$env:SPRING_PROFILES_ACTIVE='local'; `$env:DAILY_LOG_DIRECTORY='$localLogDirectory'; Set-Location '$repoRoot\daily-api'; .\mvnw spring-boot:run"
 Start-Process powershell -ArgumentList @(
     "-NoExit",
     "-Command",

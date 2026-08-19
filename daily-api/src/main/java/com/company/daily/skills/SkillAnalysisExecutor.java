@@ -156,7 +156,7 @@ public class SkillAnalysisExecutor {
         LOGGER.warn("AI analysis repair validation failed; rendering facts-only report", repairException);
         return factsOnly(sourceSnapshot, templatePackage, facts,
             "failed",
-            "AI 语义分析未通过证据校验，已生成基础报告。校验摘要：" + validationSummary(repairException));
+            "AI 语义分析未通过证据校验，已生成基础报告，可重新试运行");
       }
     }
     try {
@@ -215,10 +215,6 @@ public class SkillAnalysisExecutor {
       sanitizeReferences(candidate, "evidence_ids", knownEvidenceIds);
       sanitizeProjectReferences(candidate, collectKnownValues(facts, "project_id"),
           collectKnownValues(facts, "project_candidate_id"));
-      Set<String> reconstructedProjectIds = new LinkedHashSet<>(
-          collectKnownValues(facts, "project_candidate_id"));
-      collectReconstructedProjectIds(facts, reconstructedProjectIds);
-      markReconstructedProjectLimitations(candidate, reconstructedProjectIds);
       for (String summaryField : List.of("overall_judgment", "work_summary")) {
         JsonNode summary = candidate.path(summaryField);
         JsonNode evidenceIds = summary.path("evidence_ids");
@@ -264,42 +260,6 @@ public class SkillAnalysisExecutor {
         normalized.add(value);
         object.set(section, normalized);
       }
-    }
-  }
-
-  private void markReconstructedProjectLimitations(JsonNode node, Set<String> candidateIds) {
-    if (node == null) {
-      return;
-    }
-    if (node instanceof ObjectNode object) {
-      String projectId = object.path("project_id").asText("");
-      JsonNode limitation = object.get("limitation_note");
-      if (candidateIds.contains(projectId)
-          && (limitation == null || limitation.isNull() || limitation.asText("").isBlank())) {
-        object.put("limitation_note", "该项目由日报文本重建，需人工核验项目名称与归并关系。");
-      }
-      object.properties().forEach(entry ->
-          markReconstructedProjectLimitations(entry.getValue(), candidateIds));
-    } else if (node.isArray()) {
-      node.forEach(item -> markReconstructedProjectLimitations(item, candidateIds));
-    }
-  }
-
-  private void collectReconstructedProjectIds(JsonNode node, Set<String> projectIds) {
-    if (node == null) {
-      return;
-    }
-    if (node.isObject()) {
-      if ("reconstructed".equals(node.path("snapshot_origin").asText())) {
-        String projectId = node.path("project_id").asText("");
-        if (!projectId.isBlank()) {
-          projectIds.add(projectId);
-        }
-      }
-      node.properties().forEach(entry ->
-          collectReconstructedProjectIds(entry.getValue(), projectIds));
-    } else if (node.isArray()) {
-      node.forEach(item -> collectReconstructedProjectIds(item, projectIds));
     }
   }
 
@@ -439,15 +399,6 @@ public class SkillAnalysisExecutor {
     } catch (Exception exception) {
       return false;
     }
-  }
-
-  private static String validationSummary(Exception exception) {
-    String message = exception.getMessage();
-    if (message == null || message.isBlank()) {
-      return exception.getClass().getSimpleName();
-    }
-    String normalized = message.replaceAll("[\\r\\n\\t]+", " ").trim();
-    return normalized.substring(0, Math.min(normalized.length(), 1000));
   }
 
   private String templateSummary(String sourceSnapshot) {

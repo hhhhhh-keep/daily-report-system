@@ -7,8 +7,8 @@ alter table analysis_period_configurations
 
 update analysis_period_configurations
 set email_enabled = configuration.email_enabled,
-    email_recipients = configuration.recipients,
-    email_cc_recipients = configuration.cc_recipients,
-    email_subject_template = configuration.email_subject_template
+    email_recipients = coalesce(configuration.recipients, ''),
+    email_cc_recipients = coalesce(configuration.cc_recipients, ''),
+    email_subject_template = coalesce(configuration.email_subject_template, '{{period}}分析报告｜{{date}}')
 from analysis_configurations configuration
 where analysis_period = 'DAILY';

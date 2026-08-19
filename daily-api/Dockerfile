@@ -17,7 +17,8 @@ COPY skill-runtime-requirements.txt /tmp/skill-runtime-requirements.txt
 RUN pip install --no-cache-dir -r /tmp/skill-runtime-requirements.txt \
     && rm /tmp/skill-runtime-requirements.txt \
     && groupadd --system daily \
-    && useradd --system --gid daily --create-home daily
+    && useradd --system --gid daily --create-home daily \
+    && install -d -o daily -g daily /var/log/daily-api
 WORKDIR /app
 COPY --from=build /workspace/target/daily-api-*.jar app.jar
 USER daily

@@ -16,6 +16,10 @@ const choices = computed(() => props.projectChoices.filter((item) =>
   item.type === (isSpecialWork.value ? 'special' : 'project')))
 const needsIssueDetails = computed(() => task.value.currentStatus === 'blocked')
 const projectSearch = ref('')
+const matchingChoices = computed(() => {
+  const keyword = projectSearch.value.trim().toLocaleLowerCase()
+  return keyword ? choices.value.filter((item) => item.label.toLocaleLowerCase().includes(keyword)).slice(0, 20) : []
+})
 const stageGroups = computed(() => [
   { label: '售前', codes: ['presales-requirements-analysis', 'presales-solution-design', 'presales-bid-quotation', 'presales-technical-presentation'] },
   { label: '售中/交付', codes: ['delivery-implementation', 'delivery-testing-deployment', 'delivery-training-acceptance', 'after-sales-operations-support', 'after-sales-incident-handling', 'after-sales-optimization-upgrade', 'after-sales-customer-support'] },
@@ -50,8 +54,8 @@ watch(choices, () => { projectSearch.value = choices.value.find((item) => item.i
     </div>
     <div class="form-grid">
       <label>时段<select v-model="task.timePeriod" required><option v-if="allowedTimePeriods.includes('morning')" value="morning">上午</option><option v-if="allowedTimePeriods.includes('afternoon')" value="afternoon">下午</option><option v-if="allowedTimePeriods.includes('full-day')" value="full-day">全天</option></select></label>
-      <label>{{ isSpecialWork ? '专项名称' : '项目名称' }}<input v-model="projectSearch" :list="`project-options-${index}`" required placeholder="输入名称或选择候选项" @input="selectProject" @change="selectProject" /><datalist :id="`project-options-${index}`"><option v-for="item in choices" :key="item.id" :value="item.label" /></datalist></label>
       <label>工作任务类型<select v-model="task.workType" required @change="onWorkTypeChanged"><option v-for="item in dictionaries.work_type ?? []" :key="item.id" :value="item.code">{{ item.label }}</option></select></label>
+      <label>{{ isSpecialWork ? '专项名称' : '项目名称' }}<input v-model="projectSearch" :list="projectSearch.trim() ? `project-options-${index}` : undefined" required autocomplete="off" :placeholder="isSpecialWork ? '输入关键字选择，或直接输入新专项' : '输入关键字选择，或直接输入新项目'" @input="selectProject" @change="selectProject" /><datalist :id="`project-options-${index}`"><option v-for="item in matchingChoices" :key="item.id" :value="item.label" /></datalist><small class="field-hint">未找到时直接填写名称，提交后自动新增。</small></label>
       <label v-if="!isSpecialWork">阶段分类<select v-model="stageCategory" required @change="onStageCategoryChanged"><option value="" disabled>请选择阶段分类</option><option v-for="group in stageGroups" :key="group.label" :value="group.label">{{ group.label }}</option></select></label>
       <label v-if="!isSpecialWork">工作阶段<select v-model="task.workStage" required :disabled="!stageCategory"><option value="" disabled>请选择工作阶段</option><option v-for="item in visibleStages" :key="item.id" :value="item.code">{{ item.label }}</option></select></label>
       <label>参与角色<select v-model="task.participationRole" required><option v-for="item in dictionaries.participation_role ?? []" :key="item.id" :value="item.code">{{ item.label }}</option></select></label>

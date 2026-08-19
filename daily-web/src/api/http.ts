@@ -1,6 +1,12 @@
 import axios, { AxiosError } from 'axios'
 import { notify } from '@/utils/toast'
 
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    silent?: boolean
+  }
+}
+
 export interface ApiErrorPayload {
   code: string
   message: string
@@ -22,14 +28,22 @@ http.interceptors.response.use(
     return response
   },
   (error) => {
-    notify(apiError(error).message, 'error')
+    if (!error.config?.silent) notify(apiError(error).message, 'error')
     return Promise.reject(error)
   },
 )
 
 export function apiError(error: unknown): ApiErrorPayload {
   if (error instanceof AxiosError && error.response?.data) {
-    return error.response.data as ApiErrorPayload
+    const payload = error.response.data as Partial<ApiErrorPayload>
+    return {
+      code: payload.code ?? 'REQUEST_FAILED',
+      message: payload.message && payload.message !== 'No message available'
+        ? payload.message : '操作失败，请稍后重试。',
+      fieldErrors: payload.fieldErrors ?? {},
+      correlationId: payload.correlationId ?? '',
+      timestamp: payload.timestamp ?? new Date().toISOString(),
+    }
   }
   return {
     code: 'NETWORK_ERROR',

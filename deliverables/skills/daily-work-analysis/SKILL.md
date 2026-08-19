@@ -54,6 +54,7 @@ description: 基于受控日报数据包生成可追溯、可校验的日报管�
 - 当对应确定性事实数组非空时，`continuity_analysis`、`association_analysis`、`risk_items` 不得为空。
 - 每项只引用事实包中存在的人员、项目和证据；无法证明的单项直接省略，不得把整份分析替换成错误提示。
 - 结论需解释管理含义，但不得新增项目阶段、完成、验收、付款、收入或期限事实。
+- 所有 `summary` 与 `limitation_note` 必须使用面向管理者的中文表述；不得输出字段名、枚举值、代码、英文角色或内部标识（例如 `merge_status`、`manual_confirmation_status`、`lead`、`unmerged`、`project_status_coverage`）。日报中新出现的项目仅说明当日动态，不得要求“确认关联关系”。
 - `efficiency_insights` 不得为空；每项至少填写一个 `person_id`，正文必须写出真实姓名，并结合证据说明具体项目/专项、动作、产出、主导/协同或明确问题，不得只写事项数量或笼统评价。
 - `暂无正式项目`、`内部专项`仅为系统占位分类，不得进入任何面向领导的语义结论。
 

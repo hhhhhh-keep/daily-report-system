@@ -31,9 +31,10 @@ class SmtpTestEmailServiceTest {
   @Test
   void sendsAStandaloneTestMessageUsingSavedConfiguration() {
     when(configurationService.get()).thenReturn(configuration(
-        true, List.of("manager@example.test"), "smtp.example.test", "sender@example.test"));
+        false, List.of(), "smtp.example.test", "sender@example.test"));
 
-    SmtpTestEmailResponse response = service.send();
+    SmtpTestEmailResponse response = service.send(
+        List.of("manager@example.test"), List.of("audit@example.test"));
 
     ArgumentCaptor<EmailMessage> messageCaptor = ArgumentCaptor.forClass(EmailMessage.class);
     ArgumentCaptor<SmtpSettings> settingsCaptor = ArgumentCaptor.forClass(SmtpSettings.class);
@@ -48,33 +49,22 @@ class SmtpTestEmailServiceTest {
   }
 
   @Test
-  void rejectsDisabledEmailWithoutCallingGateway() {
+  void rejectsMissingTestRecipientsWithoutCallingGateway() {
     when(configurationService.get()).thenReturn(configuration(
-        false, List.of("manager@example.test"), "smtp.example.test", "sender@example.test"));
+        false, List.of(), "smtp.example.test", "sender@example.test"));
 
-    assertThatThrownBy(service::send)
+    assertThatThrownBy(() -> service.send(List.of(), List.of()))
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("请先启用 SMTP 邮件发送并保存配置");
-    verifyNoInteractions(gateway);
-  }
-
-  @Test
-  void rejectsMissingRecipientsWithoutCallingGateway() {
-    when(configurationService.get()).thenReturn(configuration(
-        true, List.of(), "smtp.example.test", "sender@example.test"));
-
-    assertThatThrownBy(service::send)
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("请先配置收件人并保存配置");
+        .hasMessage("请填写测试收件人");
     verifyNoInteractions(gateway);
   }
 
   @Test
   void rejectsMissingSmtpHostOrSenderWithoutCallingGateway() {
     when(configurationService.get()).thenReturn(configuration(
-        true, List.of("manager@example.test"), null, null));
+        false, List.of(), null, null));
 
-    assertThatThrownBy(service::send)
+    assertThatThrownBy(() -> service.send(List.of("manager@example.test"), List.of()))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("SMTP 服务器或发件人地址未配置完整");
     verifyNoInteractions(gateway);
