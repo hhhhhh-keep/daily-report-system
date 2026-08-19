@@ -7,6 +7,8 @@ import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -16,6 +18,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+  private static final Logger LOG = LoggerFactory.getLogger(ApiExceptionHandler.class);
+
   @ExceptionHandler(InvalidCredentialsException.class)
   ResponseEntity<ApiError> invalidCredentials(
       InvalidCredentialsException exception, HttpServletRequest request) {
@@ -27,6 +31,7 @@ public class ApiExceptionHandler {
     Map<String, String> fields = new LinkedHashMap<>();
     exception.getBindingResult().getFieldErrors()
         .forEach(error -> fields.putIfAbsent(error.getField(), error.getDefaultMessage()));
+    logValidationFailure(request, "VALIDATION_ERROR", fields);
     return response(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "请求参数无效", fields, request);
   }
 
@@ -35,6 +40,7 @@ public class ApiExceptionHandler {
     Map<String, String> fields = new LinkedHashMap<>();
     exception.getConstraintViolations().forEach(
         violation -> fields.put(violation.getPropertyPath().toString(), violation.getMessage()));
+    logValidationFailure(request, "VALIDATION_ERROR", fields);
     return response(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "请求参数无效", fields, request);
   }
 
@@ -47,6 +53,7 @@ public class ApiExceptionHandler {
 
   @ExceptionHandler(IllegalArgumentException.class)
   ResponseEntity<ApiError> illegalArgument(IllegalArgumentException exception, HttpServletRequest request) {
+    logInvalidRequest(request);
     return response(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", exception.getMessage(), Map.of(), request);
   }
 
@@ -72,9 +79,32 @@ public class ApiExceptionHandler {
       String message,
       Map<String, String> fields,
       HttpServletRequest request) {
-    Object attribute = request.getAttribute(CorrelationIdFilter.ATTRIBUTE);
-    String correlationId = attribute == null ? "unavailable" : attribute.toString();
+    String correlationId = correlationId(request);
     return ResponseEntity.status(status)
         .body(new ApiError(code, message, fields, correlationId, Instant.now()));
+  }
+
+  private static void logValidationFailure(
+      HttpServletRequest request, String code, Map<String, String> fields) {
+    LOG.warn(
+        "Request validation failed method={} path={} correlationId={} code={} fields={}",
+        request.getMethod(),
+        request.getRequestURI(),
+        correlationId(request),
+        code,
+        fields);
+  }
+
+  private static void logInvalidRequest(HttpServletRequest request) {
+    LOG.warn(
+        "Invalid request method={} path={} correlationId={} code=INVALID_REQUEST",
+        request.getMethod(),
+        request.getRequestURI(),
+        correlationId(request));
+  }
+
+  private static String correlationId(HttpServletRequest request) {
+    Object attribute = request.getAttribute(CorrelationIdFilter.ATTRIBUTE);
+    return attribute == null ? "unavailable" : attribute.toString();
   }
 }

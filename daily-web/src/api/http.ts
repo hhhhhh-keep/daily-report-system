@@ -15,6 +15,26 @@ export interface ApiErrorPayload {
   timestamp: string
 }
 
+const REPORT_FIELD_LABELS: Record<string, string> = {
+  employeeId: '请选择姓名',
+  date: '请选择日报日期',
+  attendance: '请选择出勤状态',
+  'task.timePeriod': '请选择工作时段',
+  'task.workType': '请选择工作任务类型',
+  'task.workStage': '请选择工作阶段',
+  'task.participationRole': '请选择参与角色',
+  'task.progressResult': '请填写工作内容与产出',
+  'task.currentStatus': '请选择当前状态',
+}
+
+function validationMessage(fieldErrors: Record<string, string>): string | null {
+  const labels = [...new Set(Object.keys(fieldErrors)
+    .map((field) => field.replace(/^tasks\[\d+\]\./, 'task.'))
+    .map((field) => REPORT_FIELD_LABELS[field])
+    .filter((label): label is string => Boolean(label)))]
+  return labels.length ? `请完善以下内容：${labels.join('、')}` : null
+}
+
 export const http = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
   timeout: 15_000,
@@ -36,11 +56,13 @@ http.interceptors.response.use(
 export function apiError(error: unknown): ApiErrorPayload {
   if (error instanceof AxiosError && error.response?.data) {
     const payload = error.response.data as Partial<ApiErrorPayload>
+    const fieldErrors = payload.fieldErrors ?? {}
     return {
       code: payload.code ?? 'REQUEST_FAILED',
-      message: payload.message && payload.message !== 'No message available'
-        ? payload.message : '操作失败，请稍后重试。',
-      fieldErrors: payload.fieldErrors ?? {},
+      message: validationMessage(fieldErrors)
+        ?? (payload.message && payload.message !== 'No message available'
+          ? payload.message : '操作失败，请稍后重试。'),
+      fieldErrors,
       correlationId: payload.correlationId ?? '',
       timestamp: payload.timestamp ?? new Date().toISOString(),
     }
