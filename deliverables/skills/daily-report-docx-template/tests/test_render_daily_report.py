@@ -175,6 +175,27 @@ class RenderDailyReportTests(unittest.TestCase):
         self.assertIn("补充展示项目", text)
         self.assertTrue(audit_daily_report(path, facts).ok)
 
+    def test_ai_continuity_without_project_name_keeps_formal_project_fact(self) -> None:
+        analysis = deepcopy(ANALYSIS)
+        analysis["continuity_analysis"][0]["summary"] = "当日形成推进动态，需持续跟踪后续进展。"
+
+        path = render_daily_report(TEMPLATE, FACTS, analysis, self.output)
+        text = "\n".join(paragraph.text for paragraph in Document(path).paragraphs)
+
+        self.assertIn("项目：知识库建设项目。", text)
+        self.assertTrue(audit_daily_report(path, FACTS).ok)
+
+    def test_audit_identifies_the_missing_project_name(self) -> None:
+        facts = deepcopy(FACTS)
+        facts["formal_project_dynamics"].append({**facts["formal_project_dynamics"][0],
+                                                   "project_id": "project-missing",
+                                                   "project_name": "未写入项目"})
+
+        path = render_daily_report(TEMPLATE, FACTS, None, self.output)
+        audit = audit_daily_report(path, facts)
+
+        self.assertIn("MISSING_FACT_PROJECT:未写入项目", audit.errors)
+
     def test_internal_placeholders_and_data_quality_notes_are_hidden(self) -> None:
         facts = deepcopy(FACTS)
         facts["data_quality"] = {"project_status_coverage": "available", "reconstructed_project_count": 1,

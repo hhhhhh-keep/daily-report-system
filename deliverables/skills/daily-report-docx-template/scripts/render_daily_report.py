@@ -180,6 +180,12 @@ def _continuity_narrative(document: Document, facts: Mapping[str, object],
     if ai_items:
         for index, item in enumerate(ai_items, 1):
             summary = str(item.get("summary") or "")
+            project_id = item.get("project_id")
+            formal_project = next((candidate for candidate in _list(facts.get("formal_project_dynamics"))
+                                   if candidate.get("project_id") == project_id), None)
+            project_name = str(formal_project.get("project_name") or "") if formal_project else ""
+            if project_name and project_name not in summary:
+                summary += f" 项目：{project_name}。"
             for project_name in unlinked_names:
                 if project_name in summary:
                     summary += " 该项目为日报中新出现项目，即首次出现在本期日报记录中，已纳入当日项目动态统计。"

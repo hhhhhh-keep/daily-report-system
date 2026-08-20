@@ -1,7 +1,7 @@
 {
   "format_version": "2.0",
   "name": "daily-report-docx-template",
-  "skill_version": "3.2.6",
+  "skill_version": "3.2.7",
   "runtime_profile": "daily-python-3.12-v1",
   "contracts": {
     "facts": "daily-facts/1.2.0",

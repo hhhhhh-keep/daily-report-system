@@ -12,7 +12,7 @@ description: 将日报规则 Skill 生成的确定性事实和可选的证据校
 1. 宿主读取 `manifest.json`，按 `runtime_profile=daily-python-3.12-v1` 启动隔离运行时。
 2. 使用 `assets/daily-report-template.docx` 中定义的 Letter 页面、字体和标题样式，通过 `scripts/run_render_docx.py` 生成 `report.docx`；渲染器不得覆盖模板的全局版式。
 3. 使用 `scripts/audit_daily_report.py` 校验标题、章节、实名名单、页面设置和模板锚点。
-4. AI结果缺失或未通过证据校验时，只忽略AI补充；填报、出勤、人员效能、项目动态、超期提醒和管理建议仍必须完整输出。兜底正文只能呈现项目、事项数量、状态和规则生成的简要说明；日报原文仅作为后台证据，禁止直接写入 Word。
+4. AI结果缺失或未通过证据校验时，只忽略AI补充；填报、出勤、人员效能、项目动态、超期提醒和管理建议仍必须完整输出。AI项目摘要未写出正式项目名称时，模板必须补充该名称；日报原文仅作为后台证据，禁止直接写入 Word。
 
 ## 固定报告结构
 

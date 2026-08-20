@@ -72,16 +72,19 @@ def audit_daily_report(path: Path, facts: Mapping[str, object] | None = None) ->
                 for item in attendance.get(key, []):
                     if isinstance(item, Mapping) and isinstance(item.get("name"), str) and item["name"] not in text:
                         errors.append("MISSING_FACT_NAME")
+        missing_projects: list[str] = []
         for section_name in ("formal_project_dynamics", "unlinked_project_dynamics", "stale_project_alerts"):
             section = facts.get(section_name)
             if isinstance(section, list):
                 for item in section:
                     if isinstance(item, Mapping):
                         project_name = item.get("project_name")
-                        if (isinstance(project_name, str)
+                        if (isinstance(project_name, str) and project_name.strip()
                                 and project_name not in HIDDEN_PROJECT_NAMES
                                 and project_name not in text):
-                            errors.append("MISSING_FACT_PROJECT")
+                            missing_projects.append(project_name)
+        if missing_projects:
+            errors.append("MISSING_FACT_PROJECT:" + "、".join(dict.fromkeys(missing_projects)))
         metrics = facts.get("metrics")
         status = facts.get("status_distribution")
         if isinstance(metrics, Mapping) and str(metrics.get("effective_task_count")) not in text:
