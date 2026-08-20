@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import SearchCandidateInput, { type SearchCandidate } from '@/components/common/SearchCandidateInput.vue'
 import ReportForm from '@/components/report/ReportForm.vue'
 import EmployeeLayout from '@/layouts/EmployeeLayout.vue'
 import { useReportStore } from '@/stores/report'
@@ -8,6 +9,9 @@ import { notify } from '@/utils/toast'
 const store = useReportStore()
 const employeeId = ref<number | null>(null)
 const employeeSearch = ref('')
+const employeeCandidates = computed<SearchCandidate[]>(() => (store.options?.employees ?? []).map((employee) => ({
+  key: String(employee.id), value: `${employee.name} · ${employee.teamName}`, title: employee.name, detail: employee.teamName,
+})))
 
 onMounted(async () => {
   store.reset()
@@ -21,6 +25,7 @@ function selectEmployee(): void {
     ?? (sameName.length === 1 ? sameName[0] : undefined)
   employeeId.value = matched?.id ?? null
 }
+watch(employeeSearch, selectEmployee)
 
 async function load(): Promise<void> {
   selectEmployee()
@@ -45,10 +50,7 @@ async function load(): Promise<void> {
       <form class="lookup-card" @submit.prevent="load">
         <label>
           姓名
-          <input v-model="employeeSearch" list="my-report-employee-options" required placeholder="输入姓名或选择候选项" @input="selectEmployee" @change="selectEmployee" />
-          <datalist id="my-report-employee-options">
-            <option v-for="employee in store.options?.employees ?? []" :key="employee.id" :value="`${employee.name} · ${employee.teamName}`" />
-          </datalist>
+          <SearchCandidateInput v-model="employeeSearch" :candidates="employeeCandidates" required placeholder="输入姓名关键字后选择" empty-message="未找到匹配人员" />
         </label>
         <button class="button-primary" type="submit" :disabled="store.loading">读取今日日报</button>
       </form>

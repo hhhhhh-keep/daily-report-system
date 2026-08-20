@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import SearchCandidateInput, { type SearchCandidate } from '@/components/common/SearchCandidateInput.vue'
 import DailyTaskForm from '@/components/report/DailyTaskForm.vue'
 import { useReportStore } from '@/stores/report'
 import { notify } from '@/utils/toast'
@@ -7,11 +8,9 @@ import { notify } from '@/utils/toast'
 const props = withDefaults(defineProps<{ submitLabel: string; lockEmployee?: boolean; enableDraft?: boolean }>(), { enableDraft: false })
 const store = useReportStore()
 const employeeSearch = ref('')
-const matchingEmployees = computed(() => {
-  const keyword = employeeSearch.value.trim().toLocaleLowerCase()
-  return keyword ? (store.options?.employees ?? []).filter((item) =>
-    `${item.name} ${item.teamName}`.toLocaleLowerCase().includes(keyword)).slice(0, 20) : []
-})
+const employeeCandidates = computed<SearchCandidate[]>(() => (store.options?.employees ?? []).map((employee) => ({
+  key: String(employee.id), value: `${employee.name} · ${employee.teamName}`, title: employee.name, detail: employee.teamName,
+})))
 const taskPeriods = computed(() => store.form.attendance === 'leave-morning' ? ['afternoon']
   : store.form.attendance === 'leave-afternoon' ? ['morning'] : ['morning', 'afternoon', 'full-day'])
 const fullDayLeave = computed(() => store.form.attendance === 'leave')
@@ -67,6 +66,7 @@ watch(store.form, () => {
   draftStatus.value = '正在自动保存草稿…'
   draftTimer = setTimeout(() => saveDraft(false), 700)
 }, { deep: true })
+watch(employeeSearch, selectEmployee)
 onMounted(() => { restoreDraft(); syncEmployeeSearch() })
 onBeforeUnmount(() => { if (draftTimer) saveDraft(false) })
 async function submit() { try { await store.save(); clearDraft() } catch { /* 页面已展示错误 */ } }
@@ -75,7 +75,7 @@ async function submit() { try { await store.save(); clearDraft() } catch { /* �
 <template><form class="report-form" @submit.prevent="submit">
   <section class="form-card report-meta"><div class="section-heading"><div><span class="step-label">基本信息</span><h2>你好，今天是{{ dateHint }}</h2></div></div><div class="report-context" aria-live="polite"><span>{{ greeting }}</span><span>{{ store.form.employeeId ? '已选择提交人' : '待选择提交人' }}</span><span>已填写工作内容 {{ filledTaskCount }}/{{ fullDayLeave ? 0 : store.form.tasks.length }} 项</span><span>22:00 统计当日最终填报结果</span><span :class="{ saved: store.success, saving: store.saving }">{{ saveStatus }}</span></div><div class="form-grid">
     <label>日期<input v-model="store.form.date" type="date" required /></label>
-    <label>姓名<input v-model="employeeSearch" :list="employeeSearch.trim() ? 'employee-options' : undefined" required :disabled="lockEmployee" autocomplete="off" placeholder="输入姓名关键字后选择" @input="selectEmployee" @change="selectEmployee" /><datalist id="employee-options"><option v-for="employee in matchingEmployees" :key="employee.id" :value="`${employee.name} · ${employee.teamName}`" /></datalist></label>
+    <label>姓名<SearchCandidateInput v-model="employeeSearch" :candidates="employeeCandidates" required :disabled="lockEmployee" placeholder="输入姓名关键字后选择" empty-message="未找到匹配人员" /></label>
     <label>出勤状态<select v-model="store.form.attendance" required @change="attendanceChanged"><option value="present">正常出勤</option><option value="business-trip">出差</option><option value="training">培训</option><option value="leave">全天请假</option><option value="leave-morning">上午请假</option><option value="leave-afternoon">下午请假</option></select></label>
   </div></section>
   <section v-if="!fullDayLeave" class="tasks-section"><div class="section-heading"><div><span class="step-label">工作明细</span><h2>记录每一项工作</h2></div><span class="task-count">{{ store.form.tasks.length }} 项任务</span></div><DailyTaskForm v-for="(task, index) in store.form.tasks" :key="task.id ?? `new-${index}`" :model-value="task" :index="index" :allowed-time-periods="taskPeriods" :project-choices="store.projectChoices" :dictionaries="store.options?.dictionaries ?? {}" :removable="store.form.tasks.length > 1" @update:model-value="store.form.tasks.splice(index, 1, $event)" @remove="store.removeTask(index)" /><button type="button" class="button-secondary add-task" @click="store.addTask">+ 新增工作任务</button></section>
