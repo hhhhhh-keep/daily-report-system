@@ -19,6 +19,7 @@ a { color: #155eef; }
 .page-intro { padding: 30px 0 26px; }
 .page-intro.compact { padding-top: 10px; }
 .page-intro h1 { max-width: 680px; margin: 10px 0; color: #101828; font-size: clamp(2rem, 5vw, 3.35rem); line-height: 1.08; letter-spacing: -0.045em; }
+.report-entry-intro h1 { max-width: none; white-space: nowrap; font-size: clamp(1.1rem, 5.2vw, 2.8rem); letter-spacing: -0.06em; }
 .page-intro.compact h1 { font-size: clamp(1.9rem, 4vw, 2.7rem); }
 .page-intro p { margin: 0; color: #667085; line-height: 1.7; }
 .report-form { display: grid; gap: 22px; }
@@ -195,6 +196,7 @@ td small { display: block; margin-top: 3px; color: #667085; }
   .page-shell { width: min(100% - 24px, 1120px); padding-top: 22px; }
   .page-intro { padding: 18px 0; }
   .page-intro h1 { margin: 6px 0; font-size: clamp(1.7rem, 7.5vw, 2.25rem); line-height: 1.2; letter-spacing: -0.035em; }
+  .report-entry-intro h1 { font-size: clamp(1.1rem, 5.2vw, 2.25rem); line-height: 1.15; letter-spacing: -0.06em; }
   .page-intro p { font-size: .9rem; line-height: 1.55; }
   .form-card, .task-card, .lookup-card { padding: 18px; border-radius: 14px; }
   .workday-calendar-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }

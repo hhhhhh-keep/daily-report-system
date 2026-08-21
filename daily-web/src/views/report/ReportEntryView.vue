@@ -14,7 +14,7 @@ onMounted(async () => {
 <template>
   <EmployeeLayout>
     <section class="page-shell report-page">
-      <div class="page-intro">
+      <div class="page-intro report-entry-intro">
         <span class="eyebrow">TODAY · CURRENT REPORT</span>
         <h1>把今天做成的事，清楚地留下来</h1>
         <p>每项工作单独记录，项目进展、风险和协同需求一目了然。</p>
