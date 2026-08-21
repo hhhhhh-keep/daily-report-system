@@ -58,6 +58,17 @@ description: 基于受控日报数据包生成可追溯、可校验的日报管�
 - `efficiency_insights` 不得为空；每项至少填写一个 `person_id`，正文必须写出真实姓名，并结合证据说明具体项目/专项、动作、产出、主导/协同或明确问题，不得只写事项数量或笼统评价。
 - `暂无正式项目`、`内部专项`仅为系统占位分类，不得进入任何面向领导的语义结论。
 
+## 校验失败后的定向修复
+
+宿主会把校验器返回的 `repair_requirements` 连同原候选 JSON 交给修复轮。修复轮必须仅修改这些 `path` 及其必要关联字段，保留已通过校验的内容：
+
+- `EFFICIENCY_MISSING_PERSON_NAME`：在对应 `summary` 写出 `person_ids` 中至少一人的真实姓名；
+- `MISSING_REQUIRED_ANALYSIS`：对应事实区块非空时，补充至少一条引用已有 `evidence_ids` 的分析；
+- 未知人员、项目或证据 ID：删除虚构 ID，改用事实包已有 ID；
+- 重建项目：补充说明“状态为事后重建”的 `limitation_note`。
+
+修复后必须仍输出完整的 `daily-analysis/1.2.0` JSON 对象，不得清空其他必填语义区块。
+
 ## 阻断原则
 
 - 不得编造人员、项目、阶段、产出、风险或证据 ID。

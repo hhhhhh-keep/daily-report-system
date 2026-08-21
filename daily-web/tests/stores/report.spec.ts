@@ -85,4 +85,57 @@ describe('report store', () => {
 
     expect(store.form.tasks.every((task) => task.timePeriod === 'afternoon')).toBe(true)
   })
+
+  it('loads an existing daily report when selecting its employee', async () => {
+    vi.mocked(reportApi.current).mockResolvedValue({
+      employeeId: 3, date: '2026-08-21', attendance: 'present', note: '已填写说明',
+      tasks: [{ timePeriod: 'morning', projectId: 7, workType: 'project-support', workStage: '',
+        participationRole: 'owner', progressResult: '已提交工作', currentStatus: 'completed',
+        issueType: '', collaborationRole: '', collaborationRequirement: '' }],
+    } as never)
+    const store = useReportStore()
+
+    await store.selectEmployee(3)
+
+    expect(reportApi.current).toHaveBeenCalledWith(3, expect.any(String))
+    expect(store.form.note).toBe('已填写说明')
+    expect(store.form.tasks[0]).toMatchObject({ projectId: 7, progressResult: '已提交工作' })
+    expect(store.success).toContain('已加载')
+  })
+
+  it('reports that no saved report exists without treating it as an error', async () => {
+    vi.mocked(reportApi.current).mockRejectedValue({ isAxiosError: true, response: { status: 404 } })
+    const store = useReportStore()
+
+    const found = await store.selectEmployee(3)
+
+    expect(found).toBe(false)
+    expect(store.error).toBe('')
+  })
+
+  it('clears stale loading state when the entry page resets the store', () => {
+    const store = useReportStore()
+    store.loading = true
+    store.saving = true
+
+    store.reset()
+
+    expect(store.loading).toBe(false)
+    expect(store.saving).toBe(false)
+  })
+
+  it('keeps option loading separate from the selected employee report request', async () => {
+    let resolveCurrent: ((value: never) => void) | undefined
+    vi.mocked(reportApi.current).mockImplementation(() => new Promise((resolve) => { resolveCurrent = resolve }) as never)
+    const store = useReportStore()
+
+    const selecting = store.selectEmployee(3)
+
+    expect(store.loading).toBe(true)
+    expect(store.optionsLoading).toBe(false)
+    resolveCurrent?.({
+      employeeId: 3, date: '2026-08-21', attendance: 'present', note: '', tasks: [],
+    } as never)
+    await selecting
+  })
 })

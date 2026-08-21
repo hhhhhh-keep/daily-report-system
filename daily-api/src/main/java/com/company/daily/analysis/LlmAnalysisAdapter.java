@@ -91,6 +91,11 @@ public class LlmAnalysisAdapter {
 
   public LlmAnalysisResult analyzeSkill(
       AnalysisConfiguration configuration, String instructions, Object input) {
+    return analyzeSkill(configuration, instructions, input, schemaFromInstructions(instructions));
+  }
+
+  public LlmAnalysisResult analyzeSkill(
+      AnalysisConfiguration configuration, String instructions, Object input, String jsonSchema) {
     String endpoint = StringUtils.hasText(configuration.modelEndpoint())
         ? configuration.modelEndpoint() : environment.getLlm().getEndpoint();
     String model = StringUtils.hasText(configuration.modelName())
@@ -113,6 +118,11 @@ public class LlmAnalysisAdapter {
       payload.put("messages", List.of(
           Map.of("role", "system", "content", instructions),
           Map.of("role", "user", "content", input)));
+      boolean schemaRequested = StringUtils.hasText(jsonSchema);
+      if (schemaRequested) {
+        payload.put("response_format", Map.of("type", "json_schema", "json_schema", Map.of(
+            "name", "daily_analysis", "strict", true, "schema", objectMapper.readTree(jsonSchema))));
+      }
       String requestBody = objectMapper.writeValueAsString(payload);
       for (int attempt = 0; attempt < 2; attempt++) {
         HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(endpoint))
@@ -124,6 +134,12 @@ public class LlmAnalysisAdapter {
         HttpResponse<String> response = httpClient.send(
             builder.build(), HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() < 200 || response.statusCode() >= 300) {
+          if (schemaRequested && attempt == 0) {
+            payload.put("response_format", Map.of("type", "json_object"));
+            requestBody = objectMapper.writeValueAsString(payload);
+            schemaRequested = false;
+            continue;
+          }
           return LlmAnalysisResult.failed("LLM HTTP " + response.statusCode());
         }
         JsonNode body = objectMapper.readTree(response.body());
@@ -155,5 +171,18 @@ public class LlmAnalysisAdapter {
 
   private static boolean isMiniMaxM3(String model) {
     return model.regionMatches(true, 0, "MiniMax-M3", 0, "MiniMax-M3".length());
+  }
+
+  private static String schemaFromInstructions(String instructions) {
+    String marker = "# Required analysis JSON Schema";
+    String endMarker = "# Host output requirement";
+    int start = instructions == null ? -1 : instructions.indexOf(marker);
+    if (start < 0) {
+      return null;
+    }
+    start += marker.length();
+    int end = instructions.indexOf(endMarker, start);
+    String schema = (end < 0 ? instructions.substring(start) : instructions.substring(start, end)).trim();
+    return schema.startsWith("{") ? schema : null;
   }
 }

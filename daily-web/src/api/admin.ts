@@ -48,6 +48,8 @@ export interface ProjectActivity {
   projectId: number
   participantCount: number
   latestReportDate: string | null
+  completedCount: number
+  inProgressCount: number
   blockedOrPausedCount: number
   derivedState: ProjectDerivedState | null
   stateEvents: ProjectStateEvent[]

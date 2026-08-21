@@ -31,4 +31,15 @@ describe('SearchCandidateInput', () => {
     const selections = wrapper.emitted('select') ?? []
     expect(selections[selections.length - 1]).toEqual([candidates[0]])
   })
+
+  it('keeps a selected full display value matched', async () => {
+    const wrapper = mount(SearchCandidateInput, {
+      props: { modelValue: candidates[0]!.value, candidates, placeholder: '输入姓名关键字后选择' },
+    })
+
+    await wrapper.find('input').trigger('focus')
+
+    expect(wrapper.findAll('[role="option"]')).toHaveLength(1)
+    expect(wrapper.find('[role="option"]').text()).toContain('林晨')
+  })
 })

@@ -20,4 +20,20 @@ class ProjectActivityWindowTest {
     assertThatThrownBy(() -> ProjectActivityWindow.of(LocalDate.of(2026, 8, 12), 14))
         .isInstanceOf(IllegalArgumentException.class);
   }
+
+  @Test
+  void usesOnlyTheProjectIdForAllPeriodCountQuery() {
+    Object[] args = AdminMasterDataService.countQueryArguments(9L,
+        ProjectActivityWindow.of(LocalDate.of(2026, 8, 12), 0));
+
+    assertThat(args).containsExactly(9L);
+  }
+
+  @Test
+  void ordersCountQueryDatesAsStartThenEnd() {
+    Object[] args = AdminMasterDataService.countQueryArguments(9L,
+        ProjectActivityWindow.of(LocalDate.of(2026, 8, 12), 30));
+
+    assertThat(args).containsExactly(9L, LocalDate.of(2026, 7, 14), LocalDate.of(2026, 8, 12));
+  }
 }

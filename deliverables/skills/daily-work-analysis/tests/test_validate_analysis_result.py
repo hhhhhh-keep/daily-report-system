@@ -9,7 +9,7 @@ from pathlib import Path
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SKILL_ROOT / "scripts"))
 
-from validate_analysis_result import validate_analysis_result  # noqa: E402
+from validate_analysis_result import repair_requirements, validate_analysis_result  # noqa: E402
 
 
 FACTS = {
@@ -124,6 +124,40 @@ class ValidateAnalysisResultTests(unittest.TestCase):
         candidate["efficiency_insights"][0]["summary"] = "钱程参与知识库项目模型选型并形成对比结论。"
         result = validate_analysis_result(facts, candidate)
         self.assertNotIn("EFFICIENCY_MISSING_PERSON_NAME", result.error_codes)
+
+    def test_20260820_production_regression_rejects_both_invalid_ai_responses(self) -> None:
+        facts = deepcopy(FACTS)
+        facts["efficiency_summary"] = [{"person_id": "person-2", "name": "钱程"}]
+
+        initial_candidate = valid_v12_candidate()
+        initial_candidate["efficiency_insights"][0]["person_ids"] = ["person-2"]
+        initial_candidate["efficiency_insights"][0]["summary"] = "完成知识库项目模型选型并形成对比结论。"
+        initial_result = validate_analysis_result(facts, initial_candidate)
+        self.assertIn("EFFICIENCY_MISSING_PERSON_NAME", initial_result.error_codes)
+
+        repaired_candidate = valid_v12_candidate()
+        repaired_candidate["efficiency_insights"] = []
+        repaired_candidate["continuity_analysis"] = []
+        repaired_candidate["association_analysis"] = []
+        repaired_result = validate_analysis_result(facts, repaired_candidate)
+        self.assertEqual(
+            {"efficiency_insights", "continuity_analysis", "association_analysis"},
+            {issue.path for issue in repaired_result.errors if issue.code == "MISSING_REQUIRED_ANALYSIS"},
+        )
+
+    def test_20260820_regression_emits_path_specific_repair_requirements(self) -> None:
+        facts = deepcopy(FACTS)
+        facts["efficiency_summary"] = [{"person_id": "person-2", "name": "钱程"}]
+        candidate = valid_v12_candidate()
+        candidate["efficiency_insights"][0]["summary"] = "完成模型选型并形成结论。"
+        candidate["continuity_analysis"] = []
+        candidate["association_analysis"] = []
+
+        requirements = repair_requirements(validate_analysis_result(facts, candidate).errors)
+
+        self.assertIn({"path": "efficiency_insights/0/summary", "requirement": "正文必须写出 person_ids 对应人员的真实姓名。"}, requirements)
+        self.assertIn({"path": "continuity_analysis", "requirement": "该区块对应事实非空，必须补充至少一条有证据的分析。"}, requirements)
+        self.assertIn({"path": "association_analysis", "requirement": "该区块对应事实非空，必须补充至少一条有证据的分析。"}, requirements)
 
     def test_accepts_v11_leadership_analysis(self) -> None:
         result = validate_analysis_result(FACTS, valid_v11_candidate())

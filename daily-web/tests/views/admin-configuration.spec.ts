@@ -31,7 +31,7 @@ describe('AdminTechnicalConnectionView', () => {
 
     expect(wrapper.text()).toContain('技术连接')
     expect(wrapper.text()).toContain('模型名称')
-    expect(wrapper.text()).toContain('通过 SMTP 发送邮件')
+    expect(wrapper.text()).toContain('SMTP 发件箱')
     expect(wrapper.find('fieldset').exists()).toBe(false)
     expect(wrapper.text()).not.toContain('Prompt 模板')
     expect(wrapper.text()).not.toContain('业务规则')
@@ -56,6 +56,7 @@ describe('AdminTechnicalConnectionView', () => {
     })
     await flushPromises()
 
+    await wrapper.find('input[type="email"]').setValue('test@example.com')
     await wrapper.find('[data-testid="send-test-email"]').trigger('click')
     await flushPromises()
 

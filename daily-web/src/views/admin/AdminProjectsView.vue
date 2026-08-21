@@ -153,17 +153,18 @@ onMounted(load)
     <Pagination v-model:page="page" v-model:page-size="pageSize"
       :total-items="totalItems" :total-pages="totalPages"
       :loading="loading" @change="load" />
-    <div v-if="selectedProject" class="modal-backdrop" @click.self="selectedProject = null; activity = null"><section class="form-card project-activity modal-panel" role="dialog" aria-modal="true"><div class="admin-title"><div><span class="eyebrow">REPORT ACTIVITY</span><h2>{{ selectedProject.name }} · 日报动态</h2></div>
-      <button type="button" @click="selectedProject = null; activity = null">收起</button></div>
+    <div v-if="selectedProject" class="modal-backdrop" @click.self="selectedProject = null; activity = null"><section class="form-card project-activity modal-panel" role="dialog" aria-modal="true"><div class="project-activity-header"><div><span class="eyebrow">PROJECT PROGRESS</span><h2>{{ selectedProject.name }} · 项目进展</h2></div>
+      <button type="button" aria-label="关闭项目进展" @click="selectedProject = null; activity = null">×</button></div>
       <div class="form-actions"><button v-for="days in [7, 30, 90, 0]" :key="days" type="button" :class="{ active: activityDays === days }" @click="changeActivityDays(days)">{{ days === 0 ? '全周期' : `${days} 天` }}</button></div>
       <p v-if="activityMessage" class="feedback">{{ activityMessage }}</p>
-      <template v-else-if="activity"><div class="project-activity-summary"><span>参与人员：{{ activity.participantCount }}</span><span>最近日报：{{ activity.latestReportDate || '暂无' }}</span><span>阻碍/暂停：{{ activity.blockedOrPausedCount }}</span></div>
-        <div v-if="activity.derivedState" class="project-derived-state"><strong>系统派生状态：{{ derivedStateLabel(activity.derivedState.state) }}</strong><span>当前环节：{{ stageLabel(activity.derivedState.currentStage) }}</span><span>状态起始：{{ activity.derivedState.stateStartedDate }}</span><span>依据任务：#{{ activity.derivedState.triggerTaskId }}</span></div>
-        <p v-if="latestStateEvent" class="feedback">最近状态变更：{{ latestStateEvent.occurredDate }} · {{ derivedStateLabel(latestStateEvent.state) }}（任务 #{{ latestStateEvent.triggerTaskId }}）</p>
+      <template v-else-if="activity"><section class="project-progress-summary" aria-label="项目进展摘要"><div class="project-derived-state"><strong>{{ activity.derivedState ? derivedStateLabel(activity.derivedState.state) : '暂无派生状态' }}</strong><span>当前环节：{{ activity.derivedState ? stageLabel(activity.derivedState.currentStage) : '暂无' }}</span><span v-if="activity.derivedState">自 {{ activity.derivedState.stateStartedDate }} 起</span></div>
+          <div class="project-activity-summary"><span>参与人员：{{ activity.participantCount }}</span><span>最近日报：{{ activity.latestReportDate || '暂无' }}</span><span>已完成：{{ activity.completedCount }}</span><span>进行中：{{ activity.inProgressCount }}</span><span :class="{ warning: activity.blockedOrPausedCount > 0 }">阻碍/暂停：{{ activity.blockedOrPausedCount }}</span></div>
+          <p v-if="latestStateEvent" class="state-event">最近状态变更：{{ latestStateEvent.occurredDate }} · {{ derivedStateLabel(latestStateEvent.state) }}（任务 #{{ latestStateEvent.triggerTaskId }}）</p></section>
         <p v-if="!activity.tasks.length" class="feedback">所选周期暂无日报任务。</p>
-        <div class="project-activity-track"><h3>历史动态</h3><button v-for="task in activityTimeline" :key="task.taskId" class="project-activity-task" :class="task.currentStatus" type="button" :title="task.progressResult">
-          <strong>{{ task.reportDate }} · {{ task.employeeName }} · {{ stageLabel(task.workStage) }}</strong><span>{{ statusLabel(task.currentStatus) }}</span><small>{{ task.progressResult }}</small>
-        </button></div>
+        <div class="project-activity-track"><h3>动态明细</h3><details v-for="task in activityTimeline" :key="task.taskId" class="project-activity-task" :class="task.currentStatus">
+          <summary><strong>{{ task.reportDate }} · {{ task.employeeName }}</strong><span>{{ stageLabel(task.workStage) }}</span><em>{{ statusLabel(task.currentStatus) }}</em></summary><p>{{ task.progressResult }}</p>
+          <small v-if="task.collaborationRequirement">协同需求：{{ task.collaborationRequirement }}</small>
+        </details></div>
         <Pagination v-model:page="activityPage" v-model:page-size="activityPageSize"
           :total-items="activityTotalItems" :total-pages="activityTotalPages"
           :loading="activityLoading" @change="loadActivity" />

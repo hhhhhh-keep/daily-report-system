@@ -135,6 +135,8 @@ public class SkillAnalysisExecutor {
       try {
         String repairInstructions = modelInstructions + "\n\n# Repair requirement\n"
             + "Repair the candidate. Return a syntactically valid JSON object only. "
+            + "The validationError payload contains repair_requirements. Satisfy every listed path, "
+            + "preserve all candidate sections that are not listed, and do not clear a required section. "
             + "Do not invent data or identifiers. The efficiency_insights, continuity_analysis, "
             + "association_analysis, risk_items, and next_day_actions fields must each be JSON arrays. "
             + "Do not omit a required section when the facts contain the corresponding evidence.";
@@ -215,6 +217,7 @@ public class SkillAnalysisExecutor {
       sanitizeReferences(candidate, "evidence_ids", knownEvidenceIds);
       sanitizeProjectReferences(candidate, collectKnownValues(facts, "project_id"),
           collectKnownValues(facts, "project_candidate_id"));
+      addReconstructedProjectLimitations(candidate, reconstructedProjectIds(facts));
       for (String summaryField : List.of("overall_judgment", "work_summary")) {
         JsonNode summary = candidate.path(summaryField);
         JsonNode evidenceIds = summary.path("evidence_ids");
@@ -323,6 +326,39 @@ public class SkillAnalysisExecutor {
       });
     } else if (node.isArray()) {
       node.forEach(item -> sanitizeProjectReferences(item, knownProjectIds, knownCandidateIds));
+    }
+  }
+
+  private Set<String> reconstructedProjectIds(JsonNode facts) {
+    Set<String> values = new LinkedHashSet<>();
+    collectReconstructedProjectIds(facts, values);
+    return values;
+  }
+
+  private void collectReconstructedProjectIds(JsonNode node, Set<String> values) {
+    if (node == null) {
+      return;
+    }
+    if (node.isObject()) {
+      if ("reconstructed".equals(node.path("snapshot_origin").asText())
+          && node.path("project_id").isTextual()) {
+        values.add(node.path("project_id").asText());
+      }
+      node.forEach(child -> collectReconstructedProjectIds(child, values));
+    } else if (node.isArray()) {
+      node.forEach(child -> collectReconstructedProjectIds(child, values));
+    }
+  }
+
+  private void addReconstructedProjectLimitations(JsonNode node, Set<String> reconstructedProjectIds) {
+    if (node instanceof ObjectNode object) {
+      if (reconstructedProjectIds.contains(object.path("project_id").asText())
+          && object.path("limitation_note").asText().isBlank()) {
+        object.put("limitation_note", "项目状态为事后重建，仅作趋势参考。");
+      }
+      object.forEach(child -> addReconstructedProjectLimitations(child, reconstructedProjectIds));
+    } else if (node instanceof ArrayNode array) {
+      array.forEach(child -> addReconstructedProjectLimitations(child, reconstructedProjectIds));
     }
   }
 

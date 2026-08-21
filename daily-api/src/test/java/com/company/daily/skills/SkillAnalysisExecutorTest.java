@@ -166,10 +166,10 @@ class SkillAnalysisExecutorTest {
         .contains("\"next_day_actions\":[{")
         .contains("\"project_id\":\"project-candidate-1\"")
         .contains("\"project_id\":\"project-reconstructed-1\"")
-        .contains("\"limitation_note\":null");
+        .contains("\"limitation_note\":\"项目状态为事后重建，仅作趋势参考。\"");
     assertThat(mapper.readTree(runtime.validatedAnalysis)
         .path("next_day_actions").path(0).path("limitation_note").asText())
-        .isEmpty();
+        .isEqualTo("项目状态为事后重建，仅作趋势参考。");
   }
 
   @Test
@@ -299,7 +299,8 @@ class SkillAnalysisExecutorTest {
         .contains("Required analysis JSON Schema").contains("data_contract_version")
         .contains("at most 5 items").contains("12,000 characters");
     assertThat(adapter.repairInstructions).contains("Repair the candidate")
-        .contains("Required analysis JSON Schema");
+        .contains("Required analysis JSON Schema").contains("repair_requirements")
+        .contains("preserve all candidate sections");
     assertThat(adapter.repairInput.toString()).contains("validationError")
         .contains("SCHEMA_INVALID").contains("invalidDraft").contains("facts");
     assertThat(runtime.repairedAnalysis).contains("\"evidence_ids\":[\"evidence-1\"]");

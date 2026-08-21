@@ -8,7 +8,7 @@ import sys
 from dataclasses import asdict
 from pathlib import Path
 
-from validate_analysis_result import validate_analysis_result
+from validate_analysis_result import repair_requirements, validate_analysis_result
 
 
 def main() -> int:
@@ -24,7 +24,8 @@ def main() -> int:
         return 3
     validation = validate_analysis_result(facts, analysis)
     if not validation.ok:
-        print(json.dumps({"status": "invalid_analysis", "errors": [asdict(item) for item in validation.errors]},
+        print(json.dumps({"status": "invalid_analysis", "errors": [asdict(item) for item in validation.errors],
+                          "repair_requirements": repair_requirements(validation.errors)},
                          ensure_ascii=False), file=sys.stderr)
         return 3
     print(json.dumps({"status": "validated"}, ensure_ascii=False))

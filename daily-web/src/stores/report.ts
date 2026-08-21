@@ -1,3 +1,4 @@
+import { isAxiosError } from 'axios'
 import { computed, reactive, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { apiError } from '@/api/http'
@@ -44,6 +45,7 @@ function emptyForm(): CurrentReportPayload {
 export const useReportStore = defineStore('report', () => {
   const options = ref<ReportOptions | null>(null)
   const form = reactive<CurrentReportPayload>(emptyForm())
+  const optionsLoading = ref(false)
   const loading = ref(false)
   const saving = ref(false)
   const loaded = ref(false)
@@ -57,7 +59,7 @@ export const useReportStore = defineStore('report', () => {
 
   async function loadOptions(): Promise<void> {
     if (options.value) return
-    loading.value = true
+    optionsLoading.value = true
     error.value = ''
     try {
       options.value = await reportApi.options()
@@ -66,12 +68,15 @@ export const useReportStore = defineStore('report', () => {
     } catch (cause) {
       error.value = apiError(cause).message
     } finally {
-      loading.value = false
+      optionsLoading.value = false
     }
   }
 
   function reset(): void {
     Object.assign(form, emptyForm())
+    optionsLoading.value = false
+    loading.value = false
+    saving.value = false
     loaded.value = false
     error.value = ''
     success.value = ''
@@ -138,6 +143,25 @@ export const useReportStore = defineStore('report', () => {
     }
   }
 
+  async function selectEmployee(employeeId: number): Promise<boolean> {
+    Object.assign(form, emptyForm(), { employeeId })
+    loading.value = true
+    error.value = ''
+    success.value = ''
+    try {
+      applyReport(await reportApi.current(employeeId, form.date))
+      success.value = '已加载该人员当日日报，可继续修改。'
+      return true
+    } catch (cause) {
+      if (!isAxiosError(cause) || cause.response?.status !== 404) {
+        error.value = apiError(cause).message
+      }
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
   function applyReport(report: Awaited<ReturnType<typeof reportApi.current>>): void {
     form.employeeId = report.employeeId
     form.date = report.date
@@ -149,6 +173,7 @@ export const useReportStore = defineStore('report', () => {
   return {
     options,
     form,
+    optionsLoading,
     loading,
     saving,
     loaded,
@@ -163,5 +188,6 @@ export const useReportStore = defineStore('report', () => {
     applyAttendanceRules,
     save,
     loadCurrent,
+    selectEmployee,
   }
 })

@@ -37,6 +37,25 @@ class AnalysisValidationResult:
         return tuple(issue.code for issue in self.errors)
 
 
+def repair_requirements(errors: Sequence[ValidationIssue]) -> list[dict[str, str]]:
+    """Convert validation failures into minimal, model-actionable repair requirements."""
+    requirements: list[dict[str, str]] = []
+    for error in errors:
+        requirement = {
+            "EFFICIENCY_MISSING_PERSON_NAME": "正文必须写出 person_ids 对应人员的真实姓名。",
+            "EFFICIENCY_WITHOUT_PERSON": "必须填写至少一个来自事实包的 person_id，并在正文写出该人员姓名。",
+            "MISSING_REQUIRED_ANALYSIS": "该区块对应事实非空，必须补充至少一条有证据的分析。",
+            "MISSING_EVIDENCE": "必须引用事实包中存在的 evidence_ids。",
+            "UNKNOWN_EVIDENCE_ID": "删除不存在的 evidence_id，并改用事实包中的证据。",
+            "UNKNOWN_PERSON_ID": "删除不存在的 person_id，并改用事实包中的人员。",
+            "UNKNOWN_PROJECT_ID": "删除不存在的 project_id，并改用事实包中的项目。",
+            "RECONSTRUCTED_WITHOUT_LIMITATION": "引用事后重建项目时必须填写 limitation_note，说明状态为事后重建。",
+        }.get(error.code)
+        if requirement:
+            requirements.append({"path": error.path, "requirement": requirement})
+    return requirements
+
+
 def validate_analysis_result(daily_facts: Mapping[str, object], candidate: object) -> AnalysisValidationResult:
     """Accept only schema-valid output whose references are present in daily facts."""
     errors: list[ValidationIssue] = []

@@ -29,7 +29,7 @@ const focused = ref(false)
 const activeIndex = ref(-1)
 const keyword = computed(() => props.modelValue.trim().toLocaleLowerCase('zh-CN'))
 const visibleCandidates = computed(() => keyword.value
-  ? props.candidates.filter((candidate) => `${candidate.title} ${candidate.detail ?? ''}`.toLocaleLowerCase('zh-CN').includes(keyword.value)).slice(0, 20)
+  ? props.candidates.filter((candidate) => candidate.value.toLocaleLowerCase('zh-CN').includes(keyword.value)).slice(0, 20)
   : [])
 const expanded = computed(() => focused.value && keyword.value.length > 0)
 

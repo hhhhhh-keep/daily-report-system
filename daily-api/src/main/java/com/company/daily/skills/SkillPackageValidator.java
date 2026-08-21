@@ -51,30 +51,18 @@ public class SkillPackageValidator {
     } else {
       validateScriptedEntries(metadata, manifest, entries.keySet());
     }
-    String analysisInstructions = buildAnalysisInstructions(markdown, manifest, entries);
+    String analysisSchema = analysisSchema(manifest, entries);
+    String analysisInstructions = buildAnalysisInstructions(markdown, manifest, entries, analysisSchema);
     return new ValidatedSkillPackage(metadata.name(), metadata.description(), markdown, analysisInstructions,
-        checksum(archiveBytes), manifest);
+        analysisSchema, checksum(archiveBytes), manifest);
   }
 
   private static String buildAnalysisInstructions(
-      String markdown, SkillManifest manifest, Map<String, byte[]> entries) {
-    if (manifest == null || manifest.contracts() == null
-        || manifest.contracts().get("analysis") == null) {
+      String markdown, SkillManifest manifest, Map<String, byte[]> entries, String schema) {
+    if (schema == null) {
       return markdown;
     }
-    String contract = manifest.contracts().get("analysis");
-    String contractName = contract.split("/", 2)[0];
-    String schemaPath = "schemas/" + contractName + ".schema.json";
-    byte[] schemaBytes = entries.get(schemaPath);
-    if (schemaBytes == null) {
-      throw new IllegalArgumentException("分析契约缺少对应 Schema: " + schemaPath);
-    }
-    String schema = decodeUtf8(schemaBytes, schemaPath);
-    try {
-      OBJECT_MAPPER.readTree(schema);
-    } catch (Exception exception) {
-      throw new IllegalArgumentException("分析契约 Schema 不是有效 JSON: " + schemaPath, exception);
-    }
+
     StringBuilder result = new StringBuilder(markdown);
     entries.entrySet().stream()
         .filter(entry -> entry.getKey().startsWith("references/")
@@ -90,6 +78,27 @@ public class SkillPackageValidator {
         .append("characters, each evidence_ids array within 12 IDs, and each person_ids array within 10 IDs. ")
         .append("Use only person, project, and evidence IDs present in the facts.");
     return result.toString();
+  }
+
+  private static String analysisSchema(SkillManifest manifest, Map<String, byte[]> entries) {
+    if (manifest == null || manifest.contracts() == null
+        || manifest.contracts().get("analysis") == null) {
+      return null;
+    }
+    String contract = manifest.contracts().get("analysis");
+    String contractName = contract.split("/", 2)[0];
+    String schemaPath = "schemas/" + contractName + ".schema.json";
+    byte[] schemaBytes = entries.get(schemaPath);
+    if (schemaBytes == null) {
+      throw new IllegalArgumentException("分析契约缺少对应 Schema: " + schemaPath);
+    }
+    String schema = decodeUtf8(schemaBytes, schemaPath);
+    try {
+      OBJECT_MAPPER.readTree(schema);
+    } catch (Exception exception) {
+      throw new IllegalArgumentException("分析契约 Schema 不是有效 JSON: " + schemaPath, exception);
+    }
+    return schema;
   }
 
   private static String decodeUtf8(byte[] bytes, String path) {
@@ -272,7 +281,7 @@ public class SkillPackageValidator {
   private record Metadata(String name, String description) {}
 
   public record ValidatedSkillPackage(String skillName, String description, String markdown,
-      String analysisInstructions, String checksum, SkillManifest manifest) {}
+      String analysisInstructions, String analysisSchema, String checksum, SkillManifest manifest) {}
 
   @JsonIgnoreProperties(ignoreUnknown = true)
   public record SkillManifest(@JsonProperty("format_version") String formatVersion, String name,

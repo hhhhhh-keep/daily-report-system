@@ -9,6 +9,8 @@ public record ProjectActivityResponse(
     long projectId,
     int participantCount,
     LocalDate latestReportDate,
+    int completedCount,
+    int inProgressCount,
     int blockedOrPausedCount,
     ProjectDerivedStateResponse derivedState,
     List<ProjectStateEventResponse> stateEvents,

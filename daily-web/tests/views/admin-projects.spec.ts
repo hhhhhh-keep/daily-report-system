@@ -47,7 +47,8 @@ describe('AdminProjectsView', () => {
       totalItems: 1, page: 0, pageSize: 20, totalPages: 1,
     } })
     api.projectActivity.mockResolvedValue({ data: {
-      projectId: 1, participantCount: 1, latestReportDate: '2026-08-12', blockedOrPausedCount: 0,
+      projectId: 1, participantCount: 1, latestReportDate: '2026-08-12', completedCount: 1,
+      inProgressCount: 1, blockedOrPausedCount: 0,
       derivedState: { state: 'PRESALES_IN_PROGRESS', lifecycle: 'presales',
         currentStage: 'solution-design', stateStartedDate: '2026-08-12', triggerTaskId: 2 },
       stateEvents: [{ occurredDate: '2026-08-12', state: 'PRESALES_IN_PROGRESS',
@@ -71,5 +72,7 @@ describe('AdminProjectsView', () => {
     expect(wrapper.text()).toContain('张三')
     expect(wrapper.text()).toContain('方案编写/设计')
     expect(wrapper.text()).toContain('售前推进')
+    expect(wrapper.text()).toContain('已完成：1')
+    expect(wrapper.text()).toContain('进行中：1')
   })
 })

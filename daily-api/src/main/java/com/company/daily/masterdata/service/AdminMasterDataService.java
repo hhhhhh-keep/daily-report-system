@@ -96,12 +96,12 @@ public class AdminMasterDataService {
     ProjectActivityWindow window = ProjectActivityWindow.of(
         LocalDate.now(ZoneId.of("Asia/Shanghai")), days);
     String periodClause = window.startDate() == null ? "" : " and r.report_date >= ?";
-    Object[] baseArgs = queryArguments(projectId, window);
+    Object[] baseArgs = activityQueryArguments(projectId, window);
     // 先数总条数，给前端分页控件用
     String countSql = "select count(*) from daily_tasks t "
         + "join daily_reports r on r.id=t.report_id "
         + "where t.project_id=?" + (window.startDate() == null ? "" : " and r.report_date >= ? and r.report_date <= ?");
-    long total = jdbcTemplate.queryForObject(countSql, Long.class, baseArgs);
+    long total = jdbcTemplate.queryForObject(countSql, Long.class, countQueryArguments(projectId, window));
     int offset = safePage * safeSize;
     Object[] pageArgs = new Object[baseArgs.length + 2];
     System.arraycopy(baseArgs, 0, pageArgs, 0, baseArgs.length);
@@ -118,20 +118,28 @@ public class AdminMasterDataService {
         (rs, row) -> new ProjectActivityTaskResponse(rs.getLong(1), rs.getObject(2, LocalDate.class),
             rs.getLong(3), rs.getString(4), rs.getString(5), rs.getString(6), rs.getString(7),
             rs.getString(8), rs.getString(9)), pageArgs);
-    // 注意：参与者数 / blocked 数 / 最新日期仍然按当前页计算；
-    // 如果数据跨多页需要全量聚合，可后续在 SQL 里以窗口函数实现，但当前 UI 隐含按页展示，保留即可。
-    LocalDate latest = tasks.isEmpty() ? null : tasks.getFirst().reportDate();
-    int participants = (int) tasks.stream().map(ProjectActivityTaskResponse::employeeId).distinct().count();
-    int blocked = (int) tasks.stream().filter(task -> "blocked".equals(task.currentStatus())
-        || "paused".equals(task.currentStatus())).count();
-    return new ProjectActivityResponse(projectId, participants, latest, blocked,
+    List<ProjectActivitySummary.Item> summaryItems = jdbcTemplate.query("""
+        select r.employee_id, r.report_date, t.current_status
+        from daily_tasks t
+        join daily_reports r on r.id=t.report_id
+        where t.project_id=? and r.report_date <= ?""" + periodClause,
+        (rs, row) -> new ProjectActivitySummary.Item(rs.getLong(1),
+            rs.getObject(2, LocalDate.class), rs.getString(3)), baseArgs);
+    ProjectActivitySummary summary = ProjectActivitySummary.from(summaryItems);
+    return new ProjectActivityResponse(projectId, summary.participantCount(), summary.latestReportDate(),
+        summary.completedCount(), summary.inProgressCount(), summary.blockedOrPausedCount(),
         derivedStateService.current(projectId).orElse(null), derivedStateService.events(projectId),
         tasks, safePage, safeSize, total);
   }
 
-  private Object[] queryArguments(Long projectId, ProjectActivityWindow window) {
+  private Object[] activityQueryArguments(Long projectId, ProjectActivityWindow window) {
     return window.startDate() == null ? new Object[] {projectId, window.endDate()}
         : new Object[] {projectId, window.endDate(), window.startDate()};
+  }
+
+  static Object[] countQueryArguments(Long projectId, ProjectActivityWindow window) {
+    return window.startDate() == null ? new Object[] {projectId}
+        : new Object[] {projectId, window.startDate(), window.endDate()};
   }
 
   @Transactional

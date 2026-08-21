@@ -26,6 +26,47 @@ class LlmAnalysisAdapterTest {
   }
 
   @Test
+  void sendsStrictSchemaAndFallsBackToJsonObjectWhenEndpointRejectsIt() throws Exception {
+    AtomicInteger requests = new AtomicInteger();
+    AtomicReference<String> firstRequest = new AtomicReference<>();
+    AtomicReference<String> secondRequest = new AtomicReference<>();
+    HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+    server.createContext("/chat", exchange -> {
+      String request = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+      if (requests.incrementAndGet() == 1) {
+        firstRequest.set(request);
+        exchange.sendResponseHeaders(400, -1);
+      } else {
+        secondRequest.set(request);
+        byte[] response = "{\"choices\":[{\"message\":{\"content\":\"{}\"}}]}"
+            .getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().add("Content-Type", "application/json");
+        exchange.sendResponseHeaders(200, response.length);
+        exchange.getResponseBody().write(response);
+      }
+      exchange.close();
+    });
+    server.start();
+    try {
+      AnalysisConfiguration configuration = configuration(
+          "http://localhost:" + server.getAddress().getPort() + "/chat", "test-model");
+      String instructions = "Rule\n# Required analysis JSON Schema\n{\"type\":\"object\"}\n"
+          + "# Host output requirement\nJSON only";
+
+      LlmAnalysisResult result = new LlmAnalysisAdapter(new EnvironmentProperties(), new ObjectMapper())
+          .analyzeSkill(configuration, instructions, Map.of("facts", true));
+
+      assertThat(result.status()).isEqualTo("succeeded");
+      assertThat(firstRequest.get()).contains("\"type\":\"json_schema\"")
+          .contains("\"strict\":true");
+      assertThat(secondRequest.get()).contains("\"type\":\"json_object\"")
+          .doesNotContain("\"json_schema\":");
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  @Test
   void disablesThinkingAndBoundsSkillResponseForMiniMaxM3() throws Exception {
     AtomicReference<String> requestBody = new AtomicReference<>();
     HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
